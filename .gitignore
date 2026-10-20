@@ -1,9 +1,11 @@
 # Software / Tools distributions (installer / portable IDE)
 Software/
 
-# Draw.io backup files
+# Draw.io backup & temp files
 *.bkp
 .*.bkp
+*.dtmp
+.*.dtmp
 
 # Build and IDE artifacts
 build/
