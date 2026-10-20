@@ -21,15 +21,14 @@ Hệ thống điều khiển và giám sát pin năng lượng mặt trời tự
 
 ## 🛠️ Cấu hình phần cứng
 
-- **Vi điều khiển**: ESP32-S3-WROOM-1 (**N16R8**: 16MB Octal Flash + 8MB Octal PSRAM)
-  - *Lưu ý*: Do dùng Octal OPI bus cho Flash/PSRAM, các chân `GPIO 33, 34, 35, 36, 37` được dùng nội bộ và không cắm ngoại vi.
+- **Vi điều khiển**: ESP32-S3-N16R8
   - Hỗ trợ 2.4GHz Wi-Fi (802.11 b/g/n) & Bluetooth 5 LE.
 - **Cảm biến quang học**: 4x Module quang trở (LDR Sensor Module with LM393 comparator) kết nối kênh ADC1 (`GPIO 4, 5, 6, 7`).
 - **Động cơ**: Servo Motor (PWM Control trên `GPIO 41`).
 - **Hệ thống nguồn**:
   - Tấm pin năng lượng mặt trời (Solar Panel)
   - Mạch sạc & bảo vệ pin TP4056 (Type-C)
-  - Pin Li-ion 18650
+  - Pin Li-ion 18650 mAh
   - Mạch tăng áp DC-DC Boost Converter MT3608
 
 ---

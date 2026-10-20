@@ -1,29 +1,40 @@
-<mxfile host="Electron" agent="Antigravity" pages="2">
+<mxfile host="Electron" agent="Antigravity">
   <diagram id="solar-tracker-en" name="Solar Tracker (English)">
-    <mxGraphModel dx="3953" dy="1692" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+    <mxGraphModel dx="2999" dy="3199" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="start" parent="1" style="ellipse;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;fontStyle=1;align=center;" value="Start" vertex="1">
-          <mxGeometry height="40" width="90" x="405" y="40" as="geometry" />
+          <mxGeometry height="40" width="90" x="405" y="-150" as="geometry" />
+        </mxCell>
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-4" edge="1" parent="1" source="init" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="R8wvG6qIS1wwmn2xI-YG-3">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="init" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="Initialize the system" vertex="1">
-          <mxGeometry height="44" width="250" x="325" y="110" as="geometry" />
+          <mxGeometry height="44" width="250" x="325" y="-50" as="geometry" />
         </mxCell>
-        <mxCell id="cmd" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="Dashboard command processing" vertex="1">
+        <mxCell id="cmd" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="Dashboard command" vertex="1">
           <mxGeometry height="44" width="260" x="320" y="185" as="geometry" />
         </mxCell>
         <mxCell id="read_sens" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="Read and process sensor data" vertex="1">
           <mxGeometry height="48" width="240" x="330" y="260" as="geometry" />
         </mxCell>
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-15" edge="1" parent="1" source="inp_ldr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="read_sens">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="inp_ldr" parent="1" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" value="Light sensors data (LDRs)" vertex="1">
-          <mxGeometry height="42" width="195" x="10" y="180" as="geometry" />
+          <mxGeometry height="42" width="195" x="-20" y="263" as="geometry" />
         </mxCell>
         <mxCell id="inp_bat" parent="1" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" value="Battery &amp;amp; Solar data (V, I, SOC)" vertex="1">
-          <mxGeometry height="42" width="225" x="-50" y="290" as="geometry" />
+          <mxGeometry height="42" width="225" x="-80" y="330" as="geometry" />
         </mxCell>
-        <mxCell id="inp_motor" parent="1" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" value="Current motor angle data" vertex="1">
-          <mxGeometry height="42" width="225" x="780" y="263" as="geometry" />
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-16" edge="1" parent="1" source="inp_motor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="15.16666666666697" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="inp_motor" parent="1" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" value="CONTINUOUS SYSTEM LOOP" vertex="1">
+          <mxGeometry height="42" width="225" x="760" y="-6" as="geometry" />
         </mxCell>
         <mxCell id="send_status" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="Send status via Dashboard&amp;nbsp;&lt;div&gt;(Realtime Telemetry)&lt;/div&gt;" vertex="1">
           <mxGeometry height="46" width="240" x="330" y="360" as="geometry" />
@@ -41,66 +52,60 @@
           <mxGeometry height="80" width="210" x="217.5" y="747" as="geometry" />
         </mxCell>
         <mxCell id="act_alarm" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="The fault alarm sounds &amp;amp;&lt;div&gt;sends alert to Dashboard&lt;/div&gt;" vertex="1">
-          <mxGeometry height="65" width="240" x="202.5" y="900" as="geometry" />
+          <mxGeometry height="65" width="240" x="202.5" y="955" as="geometry" />
         </mxCell>
         <mxCell id="q_night" parent="1" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" value="Is ambient light &amp;lt;Night&lt;div&gt;&amp;nbsp;threshold (Dark)?&lt;/div&gt;" vertex="1">
           <mxGeometry height="140" width="225" x="660" y="460" as="geometry" />
         </mxCell>
-        <mxCell id="act_east" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Return panel to default&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 15px;&quot;&gt;sunrise position (East)&lt;/font&gt;&lt;/div&gt;" vertex="1">
+        <mxCell id="act_east" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Return panel to East&amp;nbsp;&lt;/font&gt;&lt;span style=&quot;font-size: 15px; background-color: transparent; color: light-dark(#000000, var(--ge-light-color, #ffffff));&quot;&gt;position&amp;nbsp;&lt;/span&gt;" vertex="1">
           <mxGeometry height="80" width="225" x="660" y="678" as="geometry" />
         </mxCell>
         <mxCell id="act_sleep" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="Enter low-power sleep standby mode" vertex="1">
-          <mxGeometry height="71" width="225" x="660" y="800" as="geometry" />
+          <mxGeometry height="71" width="225" x="660" y="860" as="geometry" />
         </mxCell>
         <mxCell id="q_track" parent="1" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Is light difference &amp;gt;=&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 15px;&quot;&gt;Deadband threshold?&lt;/font&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="110" width="210" x="1210" y="550" as="geometry" />
         </mxCell>
         <mxCell id="act_hold" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Hold current panel angle&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 15px;&quot;&gt;(Motor remains idle)&lt;/font&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="48" width="165" x="990" y="630" as="geometry" />
+          <mxGeometry height="71" width="190" x="979" y="692" as="geometry" />
         </mxCell>
-        <mxCell id="UP5nGiGSNZEbkjqGDDug-2" edge="1" parent="1" source="act_rotate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=13;" target="q_charge">
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-2" edge="1" parent="1" source="act_rotate" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_float">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="act_rotate" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Rotate motor towards&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 15px;&quot;&gt;brighter side (Track sun)&lt;/font&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="48" width="180" x="1360" y="763" as="geometry" />
+          <mxGeometry height="48" width="180" x="1350" y="715" as="geometry" />
         </mxCell>
-        <mxCell id="q_charge" parent="1" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Is battery&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 15px;&quot;&gt;fully charged?&lt;/font&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="110" width="180" x="982.5" y="855" as="geometry" />
-        </mxCell>
-        <mxCell id="act_float" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="&lt;font style=&quot;font-size: 15px;&quot;&gt;Maintain float charge &amp;amp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 15px;&quot;&gt;overcharge protection&lt;/font&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="71" width="200" x="972.5" y="1060" as="geometry" />
+        <mxCell id="act_float" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="&lt;div&gt;&lt;span style=&quot;font-size: 15px;&quot;&gt;Monitor Battery Voltage &amp;amp; Charging State&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="71" width="200" x="1200" y="940" as="geometry" />
         </mxCell>
         <mxCell id="UP5nGiGSNZEbkjqGDDug-3" edge="1" parent="1" source="update_dash" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=13;" target="inp_motor">
-          <mxGeometry relative="1" x="-0.0002" as="geometry">
+          <mxGeometry relative="1" as="geometry">
             <Array as="points">
+              <mxPoint x="892.5" y="1242.5" />
               <mxPoint x="1610" y="1242.5" />
-              <mxPoint x="1610" y="284" />
+              <mxPoint x="1610" y="15" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="update_dash" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="Update the&lt;div&gt;dashboard data&lt;/div&gt;" vertex="1">
-          <mxGeometry height="65" width="240" x="465" y="1210" as="geometry" />
+          <mxGeometry height="65" width="240" x="652.5" y="1220" as="geometry" />
         </mxCell>
         <mxCell id="end" parent="1" style="ellipse;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;fontStyle=1;align=center;" value="End" vertex="1">
-          <mxGeometry height="80" width="155" x="505" y="1300" as="geometry" />
+          <mxGeometry height="80" width="155" x="695" y="1370" as="geometry" />
         </mxCell>
         <mxCell id="e1" edge="1" parent="1" source="start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="init" value="">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e2" edge="1" parent="1" source="init" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="cmd" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e3" edge="1" parent="1" source="cmd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="read_sens" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_in_ldr" edge="1" parent="1" source="inp_ldr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" target="read_sens" value="">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="e_in_bat" edge="1" parent="1" source="inp_bat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" target="read_sens" value="">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e_in_mot" edge="1" parent="1" source="inp_motor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="read_sens" value="">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="351" />
+              <mxPoint x="290" y="293.6" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="e4" edge="1" parent="1" source="read_sens" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="send_status" value="">
           <mxGeometry relative="1" as="geometry" />
@@ -132,7 +137,7 @@
         <mxCell id="e_fault_no" edge="1" parent="1" source="q_fault" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="q_night" value="&lt;font style=&quot;font-size: 25px;&quot;&gt;No&lt;/font&gt;">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_night_yes" edge="1" parent="1" source="q_night" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_east" value="Yes">
+        <mxCell id="e_night_yes" edge="1" parent="1" source="q_night" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_east" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;Yes&lt;/font&gt;">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="e_east_sleep" edge="1" parent="1" source="act_east" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_sleep" value="">
@@ -142,31 +147,18 @@
           <mxGeometry relative="1" x="-0.5091" as="geometry" />
         </mxCell>
         <mxCell id="e_track_no" edge="1" parent="1" source="q_track" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_hold" value="&lt;font style=&quot;font-size: 25px;&quot;&gt;No&lt;/font&gt;">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" x="-0.2329" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="e_track_yes" edge="1" parent="1" source="q_track" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_rotate" value="&lt;font style=&quot;font-size: 25px;&quot;&gt;Yes&lt;/font&gt;">
           <mxGeometry relative="1" x="-0.1966" as="geometry" />
         </mxCell>
-        <mxCell id="e_hold_charge" edge="1" parent="1" source="act_hold" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="q_charge" value="">
-          <mxGeometry relative="1" x="-0.4409" as="geometry">
-            <Array as="points">
-              <mxPoint x="1072.5" y="800" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e_charge_yes" edge="1" parent="1" source="q_charge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_float" value="&lt;font style=&quot;font-size: 25px;&quot;&gt;Yes&lt;/font&gt;">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e_charge_no" edge="1" parent="1" source="q_charge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_charge" value="&lt;font style=&quot;font-size: 25px;&quot;&gt;No&lt;/font&gt;">
-          <mxGeometry relative="1" x="-0.597" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="e_m_dash" edge="1" parent="1" source="act_manual" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="update_dash" value="">
-          <mxGeometry relative="1" x="-0.3065" as="geometry">
+          <mxGeometry relative="1" x="-0.3071" as="geometry">
             <Array as="points">
               <mxPoint x="-5" y="1180" />
-              <mxPoint x="585" y="1180" />
+              <mxPoint x="772.5" y="1180" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -174,22 +166,15 @@
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="322.5" y="1180" />
-              <mxPoint x="585" y="1180" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="e_sl_dash" edge="1" parent="1" source="act_charge" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="update_dash" value="">
-          <mxGeometry relative="1" x="0.1146" as="geometry">
-            <Array as="points">
               <mxPoint x="772.5" y="1180" />
-              <mxPoint x="585" y="1180" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="e_fl_dash" edge="1" parent="1" source="act_float" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="update_dash" value="">
-          <mxGeometry relative="1" x="-0.2127" as="geometry">
+          <mxGeometry relative="1" x="-0.1847" as="geometry">
             <Array as="points">
-              <mxPoint x="1072.5" y="1180" />
+              <mxPoint x="1300" y="1101" />
+              <mxPoint x="1300" y="1180" />
               <mxPoint x="585" y="1180" />
             </Array>
           </mxGeometry>
@@ -197,327 +182,43 @@
         <mxCell id="e_dash_end" edge="1" parent="1" source="update_dash" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="end" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="UP5nGiGSNZEbkjqGDDug-4" edge="1" parent="1" source="act_sleep" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="act_charge" value="">
+        <mxCell id="UP5nGiGSNZEbkjqGDDug-4" edge="1" parent="1" source="act_sleep" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=none;endFill=0;fontFamily=Segoe UI;fontSize=13;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
           <mxGeometry relative="1" as="geometry">
             <Array as="points" />
             <mxPoint x="773" y="951" as="sourcePoint" />
-            <mxPoint x="585" y="1210" as="targetPoint" />
+            <mxPoint x="772.5" y="1180" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="act_charge" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" value="Continuous solar charging&lt;div&gt;to self-power system&lt;/div&gt;" vertex="1">
-          <mxGeometry height="71" width="200" x="672.5" y="1020" as="geometry" />
-        </mxCell>
-      </root>
-    </mxGraphModel>
-  </diagram>
-  <diagram id="solar-tracker-v2-en" name="Solar Tracker V2 (English)">
-    <mxGraphModel dx="1600" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1654" math="0" shadow="0">
-      <root>
-        <mxCell id="0" />
-        <mxCell id="1" parent="0" />
-
-        <!-- Nodes -->
-        <mxCell id="v2_start" value="Start (Power ON / Boot)" style="ellipse;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="1">
-          <mxGeometry x="390" y="30" width="180" height="42" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_init" value="System Initialization (Setup)&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Configure GPIOs, 4 ADC Channels, Servo PWM)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="310" y="100" width="340" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_net" value="Connect Wi-Fi &amp;amp; Sync Firebase RTDB&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Initialize Stream Listener for /controls from Cloud)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="310" y="175" width="340" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_q_net" value="Wi-Fi &amp;amp; Firebase&lt;div&gt;connected &amp;amp; ready?&lt;/div&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" vertex="1" parent="1">
-          <mxGeometry x="385" y="250" width="190" height="90" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_act_offline" value="Activate Offline Failsafe Mode&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Autonomous local tracking, background reconnect)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="20" y="370" width="270" height="52" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_cmd_proc" value="Read Commands from Firebase RTDB&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;Node /controls: Mode (Auto/Manual), Target Angle&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="330" y="370" width="300" height="52" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_read_sens" value="Read and process sensor data&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Moving-average digital filter for ADC signals)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="335" y="460" width="290" height="50" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_inp_ldr" value="4 Light Sensors data (LDRs)&lt;div style=&quot;font-size: 10px;&quot;&gt;(Top/Bottom, Left/Right)&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=12;align=center;" vertex="1" parent="1">
-          <mxGeometry x="40" y="465" width="220" height="42" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_inp_bat" value="18650 Battery Voltage &amp;amp; Energy&lt;div style=&quot;font-size: 10px;&quot;&gt;(ADC Voltage Divider / TP4056)&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=12;align=center;" vertex="1" parent="1">
-          <mxGeometry x="35" y="530" width="230" height="42" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_inp_motor" value="Current Servo motor angle&lt;div style=&quot;font-size: 10px;&quot;&gt;(Position feedback 0° - 180°)&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=12;align=center;" vertex="1" parent="1">
-          <mxGeometry x="695" y="465" width="210" height="42" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_q_auto" value="Is system currently in&lt;div&gt;Automatic Mode (Auto)?&lt;/div&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" vertex="1" parent="1">
-          <mxGeometry x="385" y="545" width="190" height="90" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_act_manual" value="Adjust Servo angle manually&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Drive to targetAngle from Web Dashboard)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="-110" y="685" width="250" height="55" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_q_fault" value="Low Battery (&amp;lt; 3.3V) or&lt;div&gt;Sensor/Motor fault?&lt;/div&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" vertex="1" parent="1">
-          <mxGeometry x="385" y="675" width="190" height="90" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_act_stop" value="Completely halt Servo motor&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Enter Safe Standby Mode)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="180" y="795" width="210" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_act_alarm" value="Send critical fault alert&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Push notification to Web Dashboard)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="180" y="870" width="210" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_q_night" value="Ambient light &amp;lt; Night&lt;div&gt;threshold (Dark)?&lt;/div&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" vertex="1" parent="1">
-          <mxGeometry x="660" y="675" width="190" height="90" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_act_east" value="Return panel to East position&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Default sunrise alignment ~0°)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="655" y="795" width="200" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_act_sleep" value="Enter low-power sleep mode&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Disable Servo PWM pulses to save energy)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="645" y="870" width="220" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_q_track" value="Light difference &amp;gt;=&lt;div&gt;Deadband (|L-R| &amp;gt; ε)?&lt;/div&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" vertex="1" parent="1">
-          <mxGeometry x="960" y="675" width="190" height="90" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_act_hold" value="Hold current angle&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Motor remains idle)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="905" y="795" width="145" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_act_rotate" value="Rotate Servo motor&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Track maximum light)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="1070" y="795" width="150" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_bat_mon" value="Monitor Battery &amp;amp; Charging state&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Calculate % SOC from ADC, observe TP4056)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="930" y="870" width="260" height="48" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_q_cloud" value="Wi-Fi &amp;amp; Firebase&lt;div&gt;connected &amp;amp; ready?&lt;/div&gt;" style="shape=rhombus;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;align=center;" vertex="1" parent="1">
-          <mxGeometry x="385" y="990" width="190" height="80" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_push_telem" value="Push Telemetry to Firebase RTDB (/telemetry)&lt;div style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;(Battery Voltage, SOC %, 4 LDRs, Servo Angle, System State)&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="305" y="1100" width="350" height="50" as="geometry" />
-        </mxCell>
-
-        <mxCell id="v2_delay_loop" value="Sampling cycle delay (500ms - 1s)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#000000;strokeWidth=1.5;fillColor=#ffffff;fontFamily=Segoe UI;fontSize=13;arcSize=8;align=center;" vertex="1" parent="1">
-          <mxGeometry x="350" y="1185" width="260" height="40" as="geometry" />
-        </mxCell>
-
-        <!-- Edges -->
-        <mxCell id="e_start_init" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_start" target="v2_init">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_init_net" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_init" target="v2_net">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_net_qnet" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_net" target="v2_q_net">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_qnet_no" value="No (Offline)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_net" target="v2_act_offline">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="155" y="295" />
-            </Array>
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-1" edge="1" parent="1" source="act_hold" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="act_float">
+          <mxGeometry relative="1" x="-0.7285" as="geometry">
+            <mxPoint x="1073.7200000000003" y="873.2000000000003" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-
-        <mxCell id="e_qnet_yes" value="Yes (Online)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_net" target="v2_cmd_proc">
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-7" edge="1" parent="1" source="R8wvG6qIS1wwmn2xI-YG-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="cmd">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e_off_sens" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_act_offline" target="v2_read_sens">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="155" y="440" />
-              <mxPoint x="480" y="440" />
-            </Array>
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-8" connectable="0" parent="R8wvG6qIS1wwmn2xI-YG-7" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="YES" vertex="1">
+          <mxGeometry relative="1" x="-0.1145" y="1" as="geometry">
+            <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-
-        <mxCell id="e_cmd_sens" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_cmd_proc" target="v2_read_sens">
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-12" edge="1" parent="1" source="R8wvG6qIS1wwmn2xI-YG-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="R8wvG6qIS1wwmn2xI-YG-9">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e_in_ldr" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;dashed=1;endArrow=classic;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_inp_ldr" target="v2_read_sens">
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-13" connectable="0" parent="R8wvG6qIS1wwmn2xI-YG-12" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="NO" vertex="1">
+          <mxGeometry relative="1" x="0.055" y="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-3" parent="1" style="rhombus;whiteSpace=wrap;html=1;shapeInside=1;" value="&lt;div&gt;&lt;font style=&quot;font-size: 11px;&quot;&gt;WiFi&amp;amp;Firebase&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px;&quot;&gt;Connected &amp;amp;Available?&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="80" width="160" x="370" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-14" edge="1" parent="1" source="R8wvG6qIS1wwmn2xI-YG-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" target="read_sens">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e_in_bat" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;dashed=1;endArrow=classic;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_inp_bat" target="v2_read_sens">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="R8wvG6qIS1wwmn2xI-YG-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;" value="Activate Offline Mode" vertex="1">
+          <mxGeometry height="48" width="170" x="120" y="56" as="geometry" />
         </mxCell>
-
-        <mxCell id="e_in_mot" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;dashed=1;endArrow=classic;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_inp_motor" target="v2_read_sens">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_sens_qauto" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_read_sens" target="v2_q_auto">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_auto_no" value="No (Manual)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_auto" target="v2_act_manual">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="15" y="595" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_auto_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_auto" target="v2_q_fault">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_fault_yes" value="Yes (Fault)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_fault" target="v2_act_stop">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="285" y="720" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_stop_alarm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_act_stop" target="v2_act_alarm">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_fault_no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_fault" target="v2_q_night">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_night_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_night" target="v2_act_east">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_east_sleep" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_act_east" target="v2_act_sleep">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_night_no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_night" target="v2_q_track">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_track_no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_track" target="v2_act_hold">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="978" y="738" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_track_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_track" target="v2_act_rotate">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1145" y="738" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_hold_bat" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_act_hold" target="v2_bat_mon">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="978" y="855" />
-              <mxPoint x="1060" y="855" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_rot_bat" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_act_rotate" target="v2_bat_mon">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1145" y="855" />
-              <mxPoint x="1060" y="855" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <!-- Bus routing to Telemetry -->
-        <mxCell id="e_man_bus" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="v2_act_manual">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="480" y="960" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="15" y="960" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_alarm_bus" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="v2_act_alarm">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="480" y="960" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="285" y="960" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_sleep_bus" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="v2_act_sleep">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="480" y="960" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="755" y="960" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_bat_bus" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=none;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="v2_bat_mon">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="480" y="960" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="1060" y="960" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_bus_qcloud" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="v2_q_cloud">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="480" y="960" as="sourcePoint" />
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_cloud_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_cloud" target="v2_push_telem">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e_cloud_no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_q_cloud" target="v2_delay_loop">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="280" y="1030" />
-              <mxPoint x="280" y="1170" />
-              <mxPoint x="480" y="1170" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="e_push_delay" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_push_telem" target="v2_delay_loop">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- Infinite Loop Back -->
-        <mxCell id="e_loop_back" value="Continuous Embedded Loop (void loop)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontFamily=Segoe UI;fontSize=12;fontStyle=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="v2_delay_loop" target="v2_q_net">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="480" y="1250" />
-              <mxPoint x="-160" y="1250" />
-              <mxPoint x="-160" y="235" />
-              <mxPoint x="480" y="235" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>
