@@ -3,322 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Trung tâm điều khiển và giám sát hệ thống pin năng lượng mặt trời thông minh SolarController ESP32-S3">
+    <meta name="description" content="Giám sát và điều khiển hệ thống solar tracker ESP32-S3 qua Firebase Realtime Database">
     <title>SolarController IoT Dashboard | Giám sát & Điều khiển Năng lượng Mặt trời</title>
-    
-    <!-- Google Fonts & Chart.js -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-    <!-- Firebase App & Realtime Database SDK (v8 modular compat) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Background glowing ambient lights -->
-    <div class="ambient-glow glow-1"></div>
-    <div class="ambient-glow glow-2"></div>
 
-    <div class="app-layout">
-        <!-- Top Navigation Bar -->
-        <header class="top-nav">
-            <div class="brand">
-                <div class="brand-icon">
-                    <span class="sun-core">☀️</span>
-                </div>
-                <div class="brand-text">
-                    <h1>SolarController <span class="badge-pro">PRO IoT</span></h1>
-                    <p>ESP32-S3 Dual-Core • Dual/Single-Axis Solar Tracker</p>
-                </div>
-            </div>
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top app-nav">
+    <div class="container-fluid px-3 px-lg-4">
+        <a class="navbar-brand fw-bold" href="#">
+            ☀ SolarController <span class="badge text-bg-warning ms-1">PRO IoT</span>
+        </a>
+        <span class="navbar-text d-none d-xl-inline text-secondary small me-3">
+            ESP32-S3 Dual-Core • Solar Tracker
+        </span>
 
-            <div class="nav-status-group">
-                <div class="status-chip" id="chipSource">
-                    <span class="dot dot-amber"></span>
-                    <span id="sourceLabel">Nguồn: Đang kết nối...</span>
-                </div>
-                <div class="status-chip" id="chipNet">
-                    <span class="dot dot-gray"></span>
-                    <span id="netLabel">Offline</span>
-                </div>
-                <button class="btn-config" id="btnOpenConfig" title="Cấu hình kết nối">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    <span>Cài đặt</span>
-                </button>
-            </div>
-        </header>
+        <div class="navbar-nav flex-row align-items-center gap-2 me-lg-3">
+            <span class="status-chip">
+                <span class="dot dot-amber"></span>
+                <span id="sourceLabel">Nguồn: Firebase Cloud</span>
+            </span>
+            <span class="status-chip" id="chipNet">
+                <span class="dot dot-gray"></span>
+                <span id="netLabel">Đang đồng bộ...</span>
+            </span>
+            <span class="status-chip d-none d-md-inline-flex">
+                <span class="dot dot-emerald"></span>
+                <span id="navWifi">WiFi: —</span>
+            </span>
+        </div>
 
-        <!-- Main Dashboard Grid -->
-        <main class="dashboard-content">
-            <!-- Row 1: Key Metrics -->
-            <section class="metrics-grid">
-                <!-- Card 1: Góc xoay & Mô phỏng Visualizer -->
-                <div class="metric-card card-visualizer">
-                    <div class="card-header">
-                        <span class="card-title">Góc Xoay Servo Azimuth</span>
-                        <span class="mode-tag" id="tagMode">AUTO TRACKING</span>
-                    </div>
-
-                    <div class="tracker-3d-wrapper">
-                        <div id="tracker3DContainer" class="tracker-3d-container">
-                            <!-- Three.js Canvas injected dynamically here -->
-                            <div class="view3d-hud">
-                                <div class="hud-angle-badge">
-                                    <span class="hud-dot"></span>
-                                    <span>Góc 3D: </span><strong id="hud3DAngle">90.0</strong>°
-                                </div>
-                                <div class="hud-controls">
-                                    <button class="btn-hud active" id="btnViewOrbit" onclick="set3DCameraView('orbit')">🔭 Tự Do</button>
-                                    <button class="btn-hud" id="btnViewSun" onclick="set3DCameraView('sun')">☀️ Hướng Nắng</button>
-                                    <button class="btn-hud" id="btnViewTop" onclick="set3DCameraView('top')">📐 Từ Trên</button>
-                                    <button class="btn-hud" onclick="reset3DCamera()">🔄 Reset</button>
-                                </div>
-                                <div class="hud-hint">Kéo chuột xoay 3D • Cuộn phóng to/thu nhỏ</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="angle-stats-row">
-                        <div class="stat-unit">
-                            <span class="label">Góc hiện tại</span>
-                            <div class="value-highlight">
-                                <span id="valCurAngle">--</span><span class="unit-deg">°</span>
-                            </div>
-                        </div>
-                        <div class="stat-divider"></div>
-                        <div class="stat-unit">
-                            <span class="label">Mục tiêu</span>
-                            <div class="value-highlight text-cyan">
-                                <span id="valTgtAngle">--</span><span class="unit-deg">°</span>
-                            </div>
-                        </div>
-                        <div class="stat-divider"></div>
-                        <div class="stat-unit">
-                            <span class="label">Trạng thái</span>
-                            <span class="state-pill text-emerald" id="valTrackingState">Bám sáng tốt</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 2: Năng lượng & Pin 18650 -->
-                <div class="metric-card card-battery">
-                    <div class="card-header">
-                        <span class="card-title">Pin Lưu Trữ 18650</span>
-                        <span class="battery-status-tag" id="tagBatHealth">Bình thường</span>
-                    </div>
-
-                    <div class="battery-gauge-wrapper">
-                        <div class="battery-cylinder">
-                            <div class="battery-terminal"></div>
-                            <div class="battery-body">
-                                <div class="battery-fluid" id="batteryFluid">
-                                    <div class="wave"></div>
-                                </div>
-                                <div class="battery-text">
-                                    <span class="soc-large" id="valSOC">--</span><span class="soc-pct">%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="battery-details">
-                        <div class="detail-row">
-                            <span>Điện áp tế bào:</span>
-                            <strong id="valVoltage">-- V</strong>
-                        </div>
-                        <div class="detail-row">
-                            <span>Ngưỡng bảo vệ:</span>
-                            <span class="text-muted">3.30V (Low) - 4.20V (Full)</span>
-                        </div>
-                        <div class="detail-row">
-                            <span>Chống cạn kiệt:</span>
-                            <span class="text-emerald" id="valProtection">Đang bảo vệ (Safe)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 3: 4 Cảm Biến Quang Trở LDR Matrix -->
-                <div class="metric-card card-ldr">
-                    <div class="card-header">
-                        <span class="card-title">Ma Trận Cảm Biến Quang (4x LDR)</span>
-                        <span class="ldr-status-tag">ADC1 Calibrated</span>
-                    </div>
-
-                    <div class="ldr-quad-display">
-                        <!-- Top Left -->
-                        <div class="ldr-cell" id="cellTL">
-                            <span class="cell-label">TL (CH3)</span>
-                            <strong class="cell-value" id="valLdrTL">0</strong>
-                            <div class="cell-bar"><div class="cell-fill" id="fillTL"></div></div>
-                        </div>
-                        <!-- Top Right -->
-                        <div class="ldr-cell" id="cellTR">
-                            <span class="cell-label">TR (CH4)</span>
-                            <strong class="cell-value" id="valLdrTR">0</strong>
-                            <div class="cell-bar"><div class="cell-fill" id="fillTR"></div></div>
-                        </div>
-                        <!-- Bottom Left -->
-                        <div class="ldr-cell" id="cellBL">
-                            <span class="cell-label">BL (CH5)</span>
-                            <strong class="cell-value" id="valLdrBL">0</strong>
-                            <div class="cell-bar"><div class="cell-fill" id="fillBL"></div></div>
-                        </div>
-                        <!-- Bottom Right -->
-                        <div class="ldr-cell" id="cellBR">
-                            <span class="cell-label">BR (CH6)</span>
-                            <strong class="cell-value" id="valLdrBR">0</strong>
-                            <div class="cell-bar"><div class="cell-fill" id="fillBR"></div></div>
-                        </div>
-                    </div>
-
-                    <div class="diff-indicator-box">
-                        <div class="diff-header">
-                            <span>Chênh lệch Ánh sáng (Trái - Phải):</span>
-                            <strong id="valDiff">0</strong>
-                        </div>
-                        <div class="diff-bar-container">
-                            <div class="diff-center-mark"></div>
-                            <div class="diff-needle" id="diffNeedle"></div>
-                        </div>
-                        <div class="diff-scale">
-                            <span>◀ Nghiêng Trái (-2000)</span>
-                            <span>Deadband (±50)</span>
-                            <span>Nghiêng Phải (+2000) ▶</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Row 2: Control Panel & Live Charts -->
-            <section class="main-workspace-grid">
-                <!-- Control Panel -->
-                <div class="control-panel-card">
-                    <div class="card-header">
-                        <span class="card-title">Bảng Điều Khiển Hệ Thống</span>
-                        <span class="sync-indicator" id="cmdSyncStatus">Đã đồng bộ</span>
-                    </div>
-
-                    <div class="mode-selector-wrap">
-                        <label class="section-label">Chế Độ Hoạt Động</label>
-                        <div class="toggle-group">
-                            <button class="toggle-btn active" id="btnAutoMode" onclick="setSystemMode('AUTO')">
-                                <span class="btn-icon">⚡</span>
-                                <div>
-                                    <strong>Tự Động (Auto)</strong>
-                                    <small>Bám sáng theo LDR</small>
-                                </div>
-                            </button>
-                            <button class="toggle-btn" id="btnManualMode" onclick="setSystemMode('MANUAL')">
-                                <span class="btn-icon">🎮</span>
-                                <div>
-                                    <strong>Thủ Công (Manual)</strong>
-                                    <small>Điều khiển từ xa</small>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="manual-controls-section" id="manualSection">
-                        <label class="section-label">Điều Chỉnh Góc Quay Thủ Công</label>
-                        <div class="slider-container">
-                            <div class="slider-readout">
-                                <span>Góc chọn:</span>
-                                <strong id="lblSliderVal">90°</strong>
-                            </div>
-                            <input type="range" id="angleSliderInput" min="20" max="160" value="90" 
-                                   oninput="handleSliderInput(this.value)" onchange="applyManualAngle(this.value)">
-                            <div class="slider-marks">
-                                <span>20°</span>
-                                <span>55°</span>
-                                <span>90°</span>
-                                <span>125°</span>
-                                <span>160°</span>
-                            </div>
-                        </div>
-
-                        <label class="section-label" style="margin-top: 16px;">Vị Trí Cố Định Nhanh</label>
-                        <div class="preset-grid">
-                            <button class="btn-preset" onclick="sendPresetAngle(20)">
-                                <span>🌅 Đông (20°)</span>
-                            </button>
-                            <button class="btn-preset" onclick="sendPresetAngle(90)">
-                                <span>☀️ Chính Ngọ (90°)</span>
-                            </button>
-                            <button class="btn-preset" onclick="sendPresetAngle(160)">
-                                <span>🌇 Tây (160°)</span>
-                            </button>
-                            <button class="btn-preset btn-danger-soft" onclick="sendPresetAngle(20)">
-                                <span>🛡️ Safe Park</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Live Chart & System Logs -->
-                <div class="analytics-card">
-                    <div class="card-header">
-                        <span class="card-title">Biểu Đồ Vi Sai Ánh Sáng & Góc Quay</span>
-                        <div class="chart-legend-custom">
-                            <span class="legend-dot dot-primary"></span> Góc Servo
-                            <span class="legend-dot dot-amber"></span> Cường độ LDR
-                        </div>
-                    </div>
-
-                    <div class="chart-canvas-box">
-                        <canvas id="telemetryChart"></canvas>
-                    </div>
-
-                    <div class="live-event-log">
-                        <div class="log-header">
-                            <span>Nhật Ký Sự Kiện Hệ Thống</span>
-                            <button class="btn-clear-log" onclick="clearEventLogs()">Xóa</button>
-                        </div>
-                        <div class="log-stream" id="logStream">
-                            <div class="log-entry info"><span class="time">00:00:00</span> Hệ thống SolarController sẵn sàng.</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Modal Cai Dat Ket Noi Firebase -->
-    <div class="modal-overlay" id="configModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Cấu Hình Kết Nối Dashboard</h2>
-                <button class="btn-close-modal" id="btnCloseConfig">&times;</button>
-            </div>
-            <div class="modal-body"><!-- Firebase Fields -->
-                <div id="groupFirebase">
-                    <div class="form-group">
-                        <label>Firebase Database URL</label>
-                        <input type="text" id="cfgFbUrl" class="form-input" value="https://solarcontroller-1cc93-default-rtdb.asia-southeast1.firebasedatabase.app" placeholder="https://your-project-rtdb.firebaseio.com">
-                        <small class="form-help">Tìm trong Firebase Console > Realtime Database > URL database của bạn.</small>
-                    </div>
-                </div>
-
-
-                <div class="alert-box alert-info">
-                    <strong>Mẹo:</strong> Cấu hình sẽ tự động được lưu vào bộ nhớ trình duyệt (LocalStorage) của bạn để không phải nhập lại lần sau.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="btnCancelConfig">Hủy</button>
-                <button class="btn-primary" id="btnSaveConfig">Lưu & Kết Nối</button>
-            </div>
+        <div class="dropdown">
+            <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                ⚙ Cài đặt
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><button class="dropdown-item" id="btnOpenConfig">Kết nối Firebase</button></li>
+                <li><button class="dropdown-item" id="btnOpenWifi">Cấu hình WiFi</button></li>
+            </ul>
         </div>
     </div>
+</nav>
 
-    <script src="app.js"></script>
+<!-- ================= NỘI DUNG (CONTAINER-FLUID) ================= -->
+<main class="container-fluid px-3 px-lg-4">
+
+    <!-- GIÁM SÁT REALTIME -->
+    <section class="flat-section">
+        <div class="row g-4 align-items-start">
+
+            <div class="col-lg-3">
+                <div class="section-head">
+                    <h2 class="section-title">Góc Xoay Servo</h2>
+                    <span class="mode-tag" id="tagMode">—</span>
+                </div>
+                <div class="big-value">
+                    <span id="valCurAngle">—</span><span class="big-unit">°</span>
+                </div>
+                <div class="text-secondary small mt-1">Giá trị đọc từ <code>telemetry.angle</code></div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="tracker-3d-container" id="tracker3DContainer">
+                    <div class="view3d-hud">
+                        <div class="hud-angle-badge">
+                            <span class="hud-dot"></span>
+                            <span>Góc 3D:</span><strong id="hud3DAngle">90.0</strong>°
+                        </div>
+                        <div class="hud-controls">
+                            <button class="btn-hud active" id="btnViewOrbit" onclick="set3DCameraView('orbit')">🔭 Tự Do</button>
+                            <button class="btn-hud" id="btnViewTop" onclick="set3DCameraView('top')">📐 Từ Trên</button>
+                            <button class="btn-hud" onclick="reset3DCamera()">🔄 Reset</button>
+                        </div>
+                        <div class="hud-hint">Kéo chuột xoay 3D • Cuộn phóng to/thu nhỏ</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="section-head">
+                    <h2 class="section-title">Pin 18650</h2>
+                </div>
+                <div class="battery-gauge-wrapper">
+                    <div class="battery-cylinder">
+                        <div class="battery-terminal"></div>
+                        <div class="battery-body">
+                            <div class="battery-fluid" id="batteryFluid" style="height: 0%;"></div>
+                            <div class="battery-text">
+                                <span class="soc-large" id="valSOC">—</span>
+                                <span class="soc-pct">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <span>Điện áp</span>
+                    <strong id="valVoltage">— V</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CẢM BIẾN QUANG -->
+    <section class="flat-section">
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="section-head">
+                    <h2 class="section-title">Ma Trận Cảm Biến Quang (4× LDR)</h2>
+                </div>
+                <div class="ldr-quad-display">
+                    <div class="ldr-cell">
+                        <span class="cell-label">TL (Trên Trái)</span>
+                        <span class="cell-value" id="valLdrTL">—</span>
+                        <div class="cell-bar"><div class="cell-fill" id="fillTL"></div></div>
+                    </div>
+                    <div class="ldr-cell">
+                        <span class="cell-label">TR (Trên Phải)</span>
+                        <span class="cell-value" id="valLdrTR">—</span>
+                        <div class="cell-bar"><div class="cell-fill" id="fillTR"></div></div>
+                    </div>
+                    <div class="ldr-cell">
+                        <span class="cell-label">BL (Dưới Trái)</span>
+                        <span class="cell-value" id="valLdrBL">—</span>
+                        <div class="cell-bar"><div class="cell-fill" id="fillBL"></div></div>
+                    </div>
+                    <div class="ldr-cell">
+                        <span class="cell-label">BR (Dưới Phải)</span>
+                        <span class="cell-value" id="valLdrBR">—</span>
+                        <div class="cell-bar"><div class="cell-fill" id="fillBR"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="section-head">
+                    <h2 class="section-title">Chênh Lệch Ánh Sáng (Trái − Phải)</h2>
+                </div>
+                <div class="diff-indicator-box">
+                    <div class="diff-header">
+                        <span>Diff</span>
+                        <strong id="valDiff">—</strong>
+                    </div>
+                    <div class="diff-bar-container">
+                        <div class="diff-center-mark"></div>
+                        <div class="diff-needle" id="diffNeedle" style="left: 50%;"></div>
+                    </div>
+                    <div class="diff-scale">
+                        <span>◀ -2000</span>
+                        <span>0</span>
+                        <span>+2000 ▶</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BẢNG ĐIỀU KHIỂN -->
+    <section class="flat-section">
+        <div class="section-head">
+            <h2 class="section-title">Bảng Điều Khiển</h2>
+            <span class="sync-indicator" id="cmdSyncStatus">Sẵn sàng</span>
+        </div>
+
+        <div class="toggle-group">
+            <button class="toggle-btn active" id="btnAutoMode" onclick="setSystemMode('AUTO')">
+                <span class="btn-icon">⚡</span>
+                <span><strong>Tự Động (Auto)</strong><small>Bám sáng theo LDR</small></span>
+            </button>
+            <button class="toggle-btn" id="btnManualMode" onclick="setSystemMode('MANUAL')">
+                <span class="btn-icon">🎮</span>
+                <span><strong>Thủ Công (Manual)</strong><small>Điều khiển từ xa</small></span>
+            </button>
+        </div>
+
+        <div class="manual-controls-section" id="manualSection">
+            <span class="section-label">Điều chỉnh góc quay thủ công</span>
+            <div class="slider-container">
+                <div class="slider-readout">
+                    <span>Góc chọn:</span>
+                    <strong id="lblSliderVal">90°</strong>
+                </div>
+                <input type="range" id="angleSliderInput" min="20" max="160" value="90"
+                       oninput="handleSliderInput(this.value)">
+                <div class="slider-marks">
+                    <span>20°</span><span>55°</span><span>90°</span><span>125°</span><span>160°</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-warning btn-sm fw-semibold flex-fill"
+                        onclick="applyManualAngle(document.getElementById('angleSliderInput').value)">
+                    Gửi góc đã chọn
+                </button>
+            </div>
+            <span class="section-label">Vị trí cố định nhanh</span>
+            <div class="preset-grid">
+                <button class="btn-preset" onclick="sendPresetAngle(20)">🌅 Đông (20°)</button>
+                <button class="btn-preset" onclick="sendPresetAngle(90)">☀️ Chính Ngọ (90°)</button>
+                <button class="btn-preset" onclick="sendPresetAngle(160)">🌇 Tây (160°)</button>
+                <button class="btn-preset btn-danger-soft" onclick="sendPresetAngle(20)">🛡️ Safe Park</button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- ================= MODAL: KẾT NỐI FIREBASE ================= -->
+<div class="modal-overlay" id="configModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Kết Nối Firebase</h2>
+            <button class="btn-close-modal" id="btnCloseConfig">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="cfgFbUrl">Firebase Realtime Database URL</label>
+                <input type="text" id="cfgFbUrl" class="form-input"
+                       placeholder="https://your-project-rtdb.firebaseio.com">
+                <small class="form-help">Firebase Console › Realtime Database › URL database.</small>
+            </div>
+            <div class="alert-box alert-info">
+                Cấu hình lưu trong LocalStorage của trình duyệt, không cần nhập lại.
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="btnCancelConfig">Hủy</button>
+            <button class="btn-primary" id="btnSaveConfig">Lưu & Kết nối</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL: CẤU HÌNH WIFI ================= -->
+<div class="modal-overlay" id="wifiModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>Cấu Hình WiFi Cho ESP32</h2>
+            <button class="btn-close-modal" id="btnCloseWifi">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="wifiSsid">SSID (Tên mạng WiFi)</label>
+                <input type="text" id="wifiSsid" class="form-input" placeholder="Tên mạng WiFi" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="wifiPass">Mật khẩu</label>
+                <input type="password" id="wifiPass" class="form-input" placeholder="Mật khẩu WiFi" autocomplete="new-password">
+            </div>
+            <div class="form-status" id="wifiFormStatus"></div>
+            <div class="alert-box alert-info">
+                ESP32 thử kết nối tối đa <strong>20 giây</strong>. Sai mật khẩu sẽ tự động khôi phục
+                WiFi cũ. Mật khẩu bị xóa khỏi Cloud ngay sau khi ESP áp dụng.
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="btnCancelWifi">Hủy</button>
+            <button class="btn-primary" id="btnSaveWifi">Gửi cấu hình WiFi</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

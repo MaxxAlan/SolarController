@@ -37,6 +37,19 @@ function saveConfig(newConfig) {
 // ==============================================================================
 // 2. KẾT NỐI FIREBASE
 // ==============================================================================
+function boot() {
+    init3DVisualizer();
+    setupUIEventListeners();
+    applyConfigToModal();
+    startConnection();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+} else {
+    boot();
+}
+
 function startConnection() {
     const sourceLabel = document.getElementById('sourceLabel');
     const netLabel = document.getElementById('netLabel');
@@ -144,6 +157,12 @@ function onTelemetryReceived(data) {
     const clampedDiff = Math.max(-2000, Math.min(2000, data.diff));
     document.getElementById('diffNeedle').style.left = (((clampedDiff + 2000) / 4000) * 100) + '%';
     document.getElementById('valDiff').innerText = (data.diff > 0 ? '+' : '') + data.diff;
+
+    // 4. Thông tin WiFi thực từ firmware (nếu ESP chạy bản mới)
+    const navWifi = document.getElementById('navWifi');
+    if (navWifi && data.wifi_ip) {
+        navWifi.innerText = `WiFi: ${data.wifi_ssid || '—'} • ${data.wifi_ip}`;
+    }
 }
 
 // ==============================================================================
@@ -201,6 +220,32 @@ function setupUIEventListeners() {
         closeConfigModal();
         startConnection();
     };
+
+    document.getElementById('btnOpenWifi').onclick = openWifiModal;
+    document.getElementById('btnCloseWifi').onclick = closeWifiModal;
+    document.getElementById('btnCancelWifi').onclick = closeWifiModal;
+
+    document.getElementById('btnSaveWifi').onclick = () => {
+        const ssid = document.getElementById('wifiSsid').value.trim();
+        const pass = document.getElementById('wifiPass').value;
+        const status = document.getElementById('wifiFormStatus');
+
+        if (!ssid) {
+            status.innerText = 'SSID không được để trống.';
+            status.className = 'form-status danger';
+            return;
+        }
+        if (!firebaseDb) {
+            status.innerText = 'Chưa kết nối Cloud — không thể gửi.';
+            status.className = 'form-status danger';
+            return;
+        }
+
+        sendCommand({ wifi_ssid: ssid, wifi_pass: pass });
+        status.innerText = 'Đã gửi. ESP thử kết nối tối đa 20s — sai mật khẩu sẽ tự khôi phục WiFi cũ. Mật khẩu bị xóa khỏi Cloud sau khi áp dụng.';
+        status.className = 'form-status ok';
+        document.getElementById('wifiPass').value = '';
+    };
 }
 
 function openConfigModal() {
@@ -213,6 +258,14 @@ function closeConfigModal() {
 
 function applyConfigToModal() {
     document.getElementById('cfgFbUrl').value = config.firebaseUrl;
+}
+
+function openWifiModal() {
+    document.getElementById('wifiModal').classList.add('active');
+}
+
+function closeWifiModal() {
+    document.getElementById('wifiModal').classList.remove('active');
 }
 
 // ==============================================================================
