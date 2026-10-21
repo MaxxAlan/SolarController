@@ -75,6 +75,10 @@
 #define FIREBASE_AUTH "XURINmjqSrUgYAs1B7TjQbZoe8Nn151O8BWGRKYs"
 #define ENABLE_FIREBASE true // Đã bật kết nối Firebase Cloud
 
+// 1 = đã đấu LDR/servo/mạch pin thật -> gửi số sensor lên Cloud
+// 0 = chưa đấu gì (chỉ USB) -> chỉ gửi wifi info, sensor field để null
+#define HW_DATA_READY 0
+
 // Chu kỳ gửi dữ liệu Telemetry lên Cloud / Dashboard (ms)
 #define TELEMETRY_SEND_INTERVAL_MS 2000
 

@@ -156,61 +156,79 @@ function onTelemetryReceived(data) {
         netLabel.innerText = 'Cloud Online';
     }
 
-    // 1. Góc servo (angle) + mode
-    const angle = data.angle;
-    document.getElementById('valCurAngle').innerText = angle;
-    update3DTracker(angle, data);
+    const has = v => v !== undefined && v !== null;
+
+    // 1. Góc servo (angle) + mode — thiếu = chưa đấu sensor thật
+    const angle = has(data.angle) ? data.angle : null;
+    document.getElementById('valCurAngle').innerText = angle !== null ? angle : '—';
+    if (angle !== null) update3DTracker(angle, data);
 
     const tagMode = document.getElementById('tagMode');
-    const isAuto = data.mode === 'AUTO';
-    tagMode.innerText = isAuto ? 'AUTO TRACKING' : 'MANUAL CONTROL';
-    tagMode.style.borderColor = isAuto ? 'var(--primary)' : 'var(--accent)';
-    tagMode.style.color = isAuto ? 'var(--primary-bright)' : 'var(--accent)';
+    if (has(data.mode)) {
+        const isAuto = data.mode === 'AUTO';
+        tagMode.innerText = isAuto ? 'AUTO TRACKING' : 'MANUAL CONTROL';
+        tagMode.style.borderColor = isAuto ? 'var(--primary)' : 'var(--accent)';
+        tagMode.style.color = isAuto ? 'var(--primary-bright)' : 'var(--accent)';
 
-    const btnAuto = document.getElementById('btnAutoMode');
-    const btnManual = document.getElementById('btnManualMode');
-    const manualSection = document.getElementById('manualSection');
-    if (isAuto) {
-        btnAuto.classList.add('active');
-        btnManual.classList.remove('active');
-        manualSection.classList.add('disabled');
+        const btnAuto = document.getElementById('btnAutoMode');
+        const btnManual = document.getElementById('btnManualMode');
+        const manualSection = document.getElementById('manualSection');
+        if (isAuto) {
+            btnAuto.classList.add('active');
+            btnManual.classList.remove('active');
+            manualSection.classList.add('disabled');
+        } else {
+            btnAuto.classList.remove('active');
+            btnManual.classList.add('active');
+            manualSection.classList.remove('disabled');
+        }
     } else {
-        btnAuto.classList.remove('active');
-        btnManual.classList.add('active');
-        manualSection.classList.remove('disabled');
+        tagMode.innerText = 'CHƯA CÓ SENSOR';
+        tagMode.style.borderColor = 'rgba(255,255,255,0.2)';
+        tagMode.style.color = '#94a3b8';
     }
 
     // 2. Pin: soc + voltage
-    const soc = Math.max(0, Math.min(100, Math.round(data.soc)));
-    document.getElementById('valSOC').innerText = soc;
-    document.getElementById('valVoltage').innerText = Number(data.voltage).toFixed(2) + ' V';
-
     const fluid = document.getElementById('batteryFluid');
-    fluid.style.height = soc + '%';
-    if (soc > 40) {
-        fluid.style.background = 'linear-gradient(180deg, #10b981 0%, #059669 100%)';
-    } else if (soc > 20) {
-        fluid.style.background = 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)';
+    if (has(data.soc) && has(data.voltage)) {
+        const soc = Math.max(0, Math.min(100, Math.round(data.soc)));
+        document.getElementById('valSOC').innerText = soc;
+        document.getElementById('valVoltage').innerText = Number(data.voltage).toFixed(2) + ' V';
+        fluid.style.height = soc + '%';
+        if (soc > 40) {
+            fluid.style.background = 'linear-gradient(180deg, #10b981 0%, #059669 100%)';
+        } else if (soc > 20) {
+            fluid.style.background = 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)';
+        } else {
+            fluid.style.background = 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)';
+        }
     } else {
-        fluid.style.background = 'linear-gradient(180deg, #ef4444 0%, #b91c1c 100%)';
+        document.getElementById('valSOC').innerText = '—';
+        document.getElementById('valVoltage').innerText = '— V';
+        fluid.style.height = '0%';
     }
 
     // 3. LDR (4 ADC) + diff
     const maxADC = 4095;
-    const ldr = { tl: data.ldr_tl, tr: data.ldr_tr, bl: data.ldr_bl, br: data.ldr_br };
-    document.getElementById('valLdrTL').innerText = ldr.tl;
-    document.getElementById('valLdrTR').innerText = ldr.tr;
-    document.getElementById('valLdrBL').innerText = ldr.bl;
-    document.getElementById('valLdrBR').innerText = ldr.br;
+    const ldrCells = [
+        ['valLdrTL', 'fillTL', data.ldr_tl],
+        ['valLdrTR', 'fillTR', data.ldr_tr],
+        ['valLdrBL', 'fillBL', data.ldr_bl],
+        ['valLdrBR', 'fillBR', data.ldr_br],
+    ];
+    ldrCells.forEach(([valId, fillId, v]) => {
+        document.getElementById(valId).innerText = has(v) ? v : '—';
+        document.getElementById(fillId).style.width = has(v) ? ((v / maxADC) * 100) + '%' : '0%';
+    });
 
-    document.getElementById('fillTL').style.width = ((ldr.tl / maxADC) * 100) + '%';
-    document.getElementById('fillTR').style.width = ((ldr.tr / maxADC) * 100) + '%';
-    document.getElementById('fillBL').style.width = ((ldr.bl / maxADC) * 100) + '%';
-    document.getElementById('fillBR').style.width = ((ldr.br / maxADC) * 100) + '%';
-
-    const clampedDiff = Math.max(-2000, Math.min(2000, data.diff));
-    document.getElementById('diffNeedle').style.left = (((clampedDiff + 2000) / 4000) * 100) + '%';
-    document.getElementById('valDiff').innerText = (data.diff > 0 ? '+' : '') + data.diff;
+    if (has(data.diff)) {
+        const clampedDiff = Math.max(-2000, Math.min(2000, data.diff));
+        document.getElementById('diffNeedle').style.left = (((clampedDiff + 2000) / 4000) * 100) + '%';
+        document.getElementById('valDiff').innerText = (data.diff > 0 ? '+' : '') + data.diff;
+    } else {
+        document.getElementById('diffNeedle').style.left = '50%';
+        document.getElementById('valDiff').innerText = '—';
+    }
 
     // 4. Thông tin WiFi thực từ firmware (nếu ESP chạy bản mới)
     const navWifi = document.getElementById('navWifi');

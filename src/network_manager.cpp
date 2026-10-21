@@ -527,43 +527,42 @@ void SolarNetworkManager::initFirebase() {
 void SolarNetworkManager::sendFirebaseTelemetry() {
     if (!firebaseReady) return;
 
-    LDRReading ldr = tracker.getLDRData();
+    FirebaseJson json;
+    json.set("wifi_ssid", activeSsid);
+    json.set("wifi_ip", WiFi.localIP().toString());
 
-    // Chỉ gửi dữ liệu THẬT. Sensor chưa đọc được hợp lệ -> xóa node (DB = null)
+#if HW_DATA_READY
+    // Chỉ gửi số sensor THẬT. Không đọc được hợp lệ -> bỏ field (DB = null)
+    LDRReading ldr = tracker.getLDRData();
     bool ldrValid = !(ldr.topLeft == 0 && ldr.topRight == 0 &&
                       ldr.bottomLeft == 0 && ldr.bottomRight == 0) &&
                     !(ldr.topLeft >= 4095 && ldr.topRight >= 4095 &&
                       ldr.bottomLeft >= 4095 && ldr.bottomRight >= 4095);
     bool batValid = battery.getVoltage() > 1.0f && battery.getVoltage() < 5.0f;
 
+    if (ldrValid) {
+        json.set("angle", tracker.getCurrentAngle());
+        json.set("mode", tracker.getModeString());
+        json.set("ldr_tl", ldr.topLeft);
+        json.set("ldr_tr", ldr.topRight);
+        json.set("ldr_bl", ldr.bottomLeft);
+        json.set("ldr_br", ldr.bottomRight);
+        json.set("diff", ldr.diff);
+    }
+    if (batValid) {
+        json.set("voltage", battery.getVoltage());
+        json.set("soc", battery.getSOC());
+    }
+
     static int validLogCount = 0;
     if (validLogCount++ % 4 == 0) {
-        ESP_LOGE(NET_TAG, "TEL ldr=[%d,%d,%d,%d] v=%.2f soc=%d valid=%d/%d",
+        ESP_LOGE(NET_TAG, "TEL ldr=[%d,%d,%d,%d] v=%.2f valid=%d/%d",
                  ldr.topLeft, ldr.topRight, ldr.bottomLeft, ldr.bottomRight,
-                 (double)battery.getVoltage(), battery.getSOC(),
-                 (int)ldrValid, (int)batValid);
+                 (double)battery.getVoltage(), (int)ldrValid, (int)batValid);
     }
-
-    if (!ldrValid || !batValid) {
-        if (lastSentWasValid) {
-            Firebase.RTDB.deleteNode(&fbdo, "/solar_controller/telemetry");
-            lastSentWasValid = false;
-        }
-        return;
-    }
-
-    FirebaseJson json;
-    json.set("angle", tracker.getCurrentAngle());
-    json.set("mode", tracker.getModeString());
-    json.set("voltage", battery.getVoltage());
-    json.set("soc", battery.getSOC());
-    json.set("ldr_tl", ldr.topLeft);
-    json.set("ldr_tr", ldr.topRight);
-    json.set("ldr_bl", ldr.bottomLeft);
-    json.set("ldr_br", ldr.bottomRight);
-    json.set("diff", ldr.diff);
-    json.set("wifi_ssid", activeSsid);
-    json.set("wifi_ip", WiFi.localIP().toString());
+#else
+    // Chưa đấu hardware: KHÔNG gửi số sensor nào -> field null trên Cloud
+#endif
 
     if (!Firebase.RTDB.setJSON(&fbdo, "/solar_controller/telemetry", &json)) {
         ESP_LOGE(NET_TAG, "TEL WRITE FAIL code=%d reason=%s",
