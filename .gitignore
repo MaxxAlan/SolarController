@@ -11,9 +11,14 @@ Software/
 build/
 .pio/
 .vscode/
+.cache/
+compile_commands.json
 *.hex
 *.bin
 *.elf
+
+# Firebase Hosting cache
+.firebase/
 
 # OS generated files
 Thumbs.db

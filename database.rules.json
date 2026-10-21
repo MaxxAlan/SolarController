@@ -1,0 +1,16 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "solar_controller": {
+      "telemetry": {
+        ".read": true,
+        ".write": false
+      },
+      "command": {
+        ".read": true,
+        ".write": true
+      }
+    }
+  }
+}

@@ -37,9 +37,31 @@ Hệ thống điều khiển và giám sát pin năng lượng mặt trời tự
 
 ```text
 SolarController/
-├── Code Base/              # Mã nguồn chương trình cho ESP32-S3
+├── include/                # Header cấu hình (chân, ngưỡng bám sáng, WiFi, Firebase)
+│   └── config.h
+├── src/                    # Mã nguồn C++ cho ESP32-S3 (Tracker, Battery, Network, Main)
+│   ├── main.cpp
+│   ├── tracker.cpp / .h
+│   ├── battery_monitor.cpp / .h
+│   └── network_manager.cpp / .h
+├── Dashboard/              # Web Dashboard giám sát & mô phỏng 3D thời gian thực (Three.js)
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
 ├── Cricular Diagram/       # Sơ đồ kết nối phần cứng và mạch nguyên lý
 ├── Flow Chart/             # Lưu đồ thuật toán vận hành hệ thống (Draw.io & ảnh PNG)
-├── .gitignore              # Bỏ qua các file cài đặt và file tạm
+├── platformio.ini          # Cấu hình PlatformIO chuẩn cho ESP32-S3-DevKitC-1 N16R8
+├── .gitignore              # Bỏ qua các file build và file tạm
 └── README.md               # Tài liệu giới thiệu dự án
 ```
+
+---
+
+## ⚡ Hướng dẫn nạp Firmware nhanh với PlatformIO
+
+1. Mở thư mục dự án `SolarController` bằng **VS Code** (đã cài extension **PlatformIO IDE**).
+2. Tùy chỉnh thông tin Wi-Fi và ngưỡng cảm biến tại [`include/config.h`](include/config.h).
+3. Kết nối board ESP32-S3 vào máy tính qua cổng USB (CH343 UART hoặc Native USB).
+4. Bấm nút **Build** (`✔`) và **Upload** (`➡`) trên thanh công cụ PlatformIO ở đáy màn hình VS Code.
+5. Mở **Serial Monitor** (115200 baud) để theo dõi thông số hoặc mở [`Dashboard/index.html`](Dashboard/index.html) để theo dõi mô phỏng 3D & telemetry thời gian thực.
+
