@@ -55,6 +55,7 @@ code { color: var(--accent); }
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .dot-emerald { background: var(--success); box-shadow: 0 0 8px var(--success); }
 .dot-amber { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+.dot-red { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
 .dot-gray { background: #64748b; }
 
 .dropdown-menu {

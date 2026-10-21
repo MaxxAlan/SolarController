@@ -15,6 +15,54 @@ let config = loadConfig();
 let firebaseApp = null;
 let firebaseDb = null;
 let hasTelemetry = false;
+let lastTelemetryAt = 0;
+let staleRendered = false;
+
+const STALE_MS = 10000;
+
+function renderStaleValues() {
+    if (staleRendered) return;
+    staleRendered = true;
+
+    document.getElementById('valCurAngle').innerText = '—';
+    const tagMode = document.getElementById('tagMode');
+    tagMode.innerText = 'ESP32 NGẮT KẾT NỐI';
+    tagMode.style.borderColor = 'rgba(255,255,255,0.2)';
+    tagMode.style.color = '#94a3b8';
+
+    document.getElementById('valSOC').innerText = '—';
+    document.getElementById('valVoltage').innerText = '— V';
+    document.getElementById('batteryFluid').style.height = '0%';
+
+    ['valLdrTL', 'valLdrTR', 'valLdrBL', 'valLdrBR'].forEach(id => {
+        document.getElementById(id).innerText = '—';
+    });
+    ['fillTL', 'fillTR', 'fillBL', 'fillBR'].forEach(id => {
+        document.getElementById(id).style.width = '0%';
+    });
+
+    document.getElementById('valDiff').innerText = '—';
+    document.getElementById('diffNeedle').style.left = '50%';
+
+    const navWifi = document.getElementById('navWifi');
+    if (navWifi) navWifi.innerText = 'WiFi: —';
+}
+
+function updateEspStatusChip() {
+    const dot = document.getElementById('espDot');
+    const label = document.getElementById('espLabel');
+    if (!dot || !label) return;
+    const age = lastTelemetryAt ? Date.now() - lastTelemetryAt : Infinity;
+    if (age < STALE_MS) {
+        dot.className = 'dot dot-emerald';
+        label.innerText = 'ESP32: Online';
+    } else {
+        dot.className = 'dot dot-red';
+        label.innerText = lastTelemetryAt ? 'ESP32: Mất dữ liệu' : 'ESP32: Chưa kết nối';
+        renderStaleValues();
+    }
+}
+setInterval(updateEspStatusChip, 2000);
 
 function loadConfig() {
     const saved = localStorage.getItem('solar_controller_cfg');
@@ -51,12 +99,10 @@ if (document.readyState === 'loading') {
 }
 
 function startConnection() {
-    const sourceLabel = document.getElementById('sourceLabel');
     const netLabel = document.getElementById('netLabel');
     const chipNet = document.getElementById('chipNet');
-    sourceLabel.innerText = 'Nguồn: Firebase Cloud';
     netLabel.innerText = 'Đang đồng bộ...';
-    chipNet.querySelector('.dot').className = 'dot dot-amber';
+    chipNet.querySelector('.dot').className = 'dot dot-gray';
 
     if (!config.firebaseUrl) {
         openConfigModal();
@@ -83,6 +129,11 @@ function startConnection() {
             const data = snap.val();
             if (data) {
                 onTelemetryReceived(data);
+            } else {
+                // DB null -> không có dữ liệu thật -> hiện trạng thái ngắt
+                lastTelemetryAt = 0;
+                staleRendered = false;
+                updateEspStatusChip();
             }
         });
     } catch (err) {
@@ -96,6 +147,9 @@ function startConnection() {
 // ==============================================================================
 function onTelemetryReceived(data) {
     hasTelemetry = true;
+    lastTelemetryAt = Date.now();
+    staleRendered = false;
+    updateEspStatusChip();
 
     const netLabel = document.getElementById('netLabel');
     if (netLabel.innerText.includes('chưa có dữ liệu')) {

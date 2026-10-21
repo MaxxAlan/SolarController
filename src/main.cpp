@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "esp_log.h"
 #include "config.h"
 #include "tracker.h"
 #include "battery_monitor.h"
@@ -23,6 +24,7 @@ void setup() {
     Serial.begin(115200);
     delay(1000); // Đợi ổn định nguồn và Serial CDC
 
+    rgbLedWrite(RGB_BUILTIN, 150, 100, 0); // vàng: đang boot
     printBanner();
 
     // 1. Khởi tạo thuật toán bám sáng & cảm biến quang học
@@ -42,6 +44,7 @@ void setup() {
 }
 
 void loop() {
+
     // 1. Cập nhật tác vụ mạng (Web server, Firebase, nhận lệnh Dashboard)
     network.update();
 

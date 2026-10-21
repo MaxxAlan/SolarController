@@ -29,6 +29,7 @@ private:
     bool onlineState;
     unsigned long lastWiFiCheckMs;
     unsigned long lastTelemetrySendMs;
+    bool lastSentWasValid;
 
     // Cấu hình Wi-Fi động (nhận từ Cloud, lưu vào NVS)
     Preferences prefs;

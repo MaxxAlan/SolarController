@@ -30,9 +30,9 @@
         </span>
 
         <div class="navbar-nav flex-row align-items-center gap-2 me-lg-3">
-            <span class="status-chip">
-                <span class="dot dot-amber"></span>
-                <span id="sourceLabel">Nguồn: Firebase Cloud</span>
+            <span class="status-chip" id="chipEsp">
+                <span class="dot dot-red" id="espDot"></span>
+                <span id="espLabel">ESP32: Chưa kết nối</span>
             </span>
             <span class="status-chip" id="chipNet">
                 <span class="dot dot-gray"></span>
@@ -125,22 +125,22 @@
                 </div>
                 <div class="ldr-quad-display">
                     <div class="ldr-cell">
-                        <span class="cell-label">TL (Trên Trái)</span>
+                        <span class="cell-label">Đông (TL)</span>
                         <span class="cell-value" id="valLdrTL">—</span>
                         <div class="cell-bar"><div class="cell-fill" id="fillTL"></div></div>
                     </div>
                     <div class="ldr-cell">
-                        <span class="cell-label">TR (Trên Phải)</span>
+                        <span class="cell-label">Tây (TR)</span>
                         <span class="cell-value" id="valLdrTR">—</span>
                         <div class="cell-bar"><div class="cell-fill" id="fillTR"></div></div>
                     </div>
                     <div class="ldr-cell">
-                        <span class="cell-label">BL (Dưới Trái)</span>
+                        <span class="cell-label">Nam (BL)</span>
                         <span class="cell-value" id="valLdrBL">—</span>
                         <div class="cell-bar"><div class="cell-fill" id="fillBL"></div></div>
                     </div>
                     <div class="ldr-cell">
-                        <span class="cell-label">BR (Dưới Phải)</span>
+                        <span class="cell-label">Bắc (BR)</span>
                         <span class="cell-value" id="valLdrBR">—</span>
                         <div class="cell-bar"><div class="cell-fill" id="fillBR"></div></div>
                     </div>

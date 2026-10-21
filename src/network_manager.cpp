@@ -1,4 +1,12 @@
 #include "network_manager.h"
+#include "esp_log.h"
+
+static const char* NET_TAG = "NET";
+
+// Chỉ báo LED RGB onboard (WS2812 GPIO48)
+static void rgbStatus(uint8_t r, uint8_t g, uint8_t b) {
+    rgbLedWrite(RGB_BUILTIN, r, g, b);
+}
 
 // HTML UI Dashboard được nhúng trực tiếp vào Flash ESP32-S3
 static const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
@@ -335,6 +343,7 @@ SolarNetworkManager::SolarNetworkManager(SolarTracker& tracker, BatteryMonitor& 
       onlineState(false),
       lastWiFiCheckMs(0),
       lastTelemetrySendMs(0),
+      lastSentWasValid(true),
       wifiSwitchInProgress(false),
       wifiSwitchStartMs(0),
       server(LOCAL_WEB_PORT)
@@ -345,11 +354,14 @@ SolarNetworkManager::SolarNetworkManager(SolarTracker& tracker, BatteryMonitor& 
 }
 
 void SolarNetworkManager::begin() {
+    rgbStatus(200, 80, 0);  // cam: khởi động mạng
     // Đọc cấu hình Wi-Fi đã lưu trong NVS (ưu tiên) hoặc mặc định ở config.h
-    prefs.begin("solarcfg", true);
+    // readOnly=false để tự tạo namespace khi chưa tồn tại
+    prefs.begin("solarcfg", false);
     activeSsid = prefs.getString("ssid", WIFI_SSID);
     activePass = prefs.getString("pass", WIFI_PASSWORD);
     prefs.end();
+    rgbStatus(0, 0, 150);  // xanh dương: đang bật WiFi
 
     Serial.println("\n[NETWORK] Connecting to Wi-Fi...");
     Serial.printf("[NETWORK] SSID: %s\n", activeSsid.c_str());
@@ -366,11 +378,17 @@ void SolarNetworkManager::begin() {
 
     if (WiFi.status() == WL_CONNECTED) {
         onlineState = true;
+        rgbStatus(0, 150, 0);  // xanh lá: WiFi OK
+        String ip = WiFi.localIP().toString();
         Serial.println("\n[NETWORK] Wi-Fi Connected!");
-        Serial.printf("[NETWORK] IP Address: %s\n", WiFi.localIP().toString().c_str());
+        Serial.printf("[NETWORK] IP Address: %s\n", ip.c_str());
+        ESP_LOGI(NET_TAG, "WiFi OK ssid=%s ip=%s rssi=%d",
+                 activeSsid.c_str(), ip.c_str(), WiFi.RSSI());
     } else {
         onlineState = false;
+        rgbStatus(150, 0, 0);  // đỏ: WiFi fail
         Serial.println("\n[NETWORK] Wi-Fi Connection Timeout -> Entering OFFLINE FAILSAFE Mode");
+        ESP_LOGE(NET_TAG, "WiFi FAIL ssid=%s status=%d", activeSsid.c_str(), (int)WiFi.status());
     }
 
     // Luôn khởi tạo Web server & Firebase (sẽ tự đồng bộ khi có mạng)
@@ -503,14 +521,38 @@ void SolarNetworkManager::initFirebase() {
     Firebase.reconnectWiFi(true);
     firebaseReady = true;
     Serial.println("[FIREBASE] Initialized.");
+    ESP_LOGI(NET_TAG, "Firebase init OK host=%s", FIREBASE_HOST);
 }
 
 void SolarNetworkManager::sendFirebaseTelemetry() {
     if (!firebaseReady) return;
 
-    FirebaseJson json;
     LDRReading ldr = tracker.getLDRData();
 
+    // Chỉ gửi dữ liệu THẬT. Sensor chưa đọc được hợp lệ -> xóa node (DB = null)
+    bool ldrValid = !(ldr.topLeft == 0 && ldr.topRight == 0 &&
+                      ldr.bottomLeft == 0 && ldr.bottomRight == 0) &&
+                    !(ldr.topLeft >= 4095 && ldr.topRight >= 4095 &&
+                      ldr.bottomLeft >= 4095 && ldr.bottomRight >= 4095);
+    bool batValid = battery.getVoltage() > 1.0f && battery.getVoltage() < 5.0f;
+
+    static int validLogCount = 0;
+    if (validLogCount++ % 4 == 0) {
+        ESP_LOGE(NET_TAG, "TEL ldr=[%d,%d,%d,%d] v=%.2f soc=%d valid=%d/%d",
+                 ldr.topLeft, ldr.topRight, ldr.bottomLeft, ldr.bottomRight,
+                 (double)battery.getVoltage(), battery.getSOC(),
+                 (int)ldrValid, (int)batValid);
+    }
+
+    if (!ldrValid || !batValid) {
+        if (lastSentWasValid) {
+            Firebase.RTDB.deleteNode(&fbdo, "/solar_controller/telemetry");
+            lastSentWasValid = false;
+        }
+        return;
+    }
+
+    FirebaseJson json;
     json.set("angle", tracker.getCurrentAngle());
     json.set("mode", tracker.getModeString());
     json.set("voltage", battery.getVoltage());
@@ -523,7 +565,12 @@ void SolarNetworkManager::sendFirebaseTelemetry() {
     json.set("wifi_ssid", activeSsid);
     json.set("wifi_ip", WiFi.localIP().toString());
 
-    Firebase.RTDB.setJSONAsync(&fbdo, "/solar_controller/telemetry", &json);
+    if (!Firebase.RTDB.setJSON(&fbdo, "/solar_controller/telemetry", &json)) {
+        ESP_LOGE(NET_TAG, "TEL WRITE FAIL code=%d reason=%s",
+                 fbdo.errorCode(), fbdo.errorReason().c_str());
+        return;
+    }
+    lastSentWasValid = true;
 }
 
 void SolarNetworkManager::readFirebaseCommands() {
@@ -579,6 +626,7 @@ void SolarNetworkManager::checkWiFiConnection() {
 }
 
 void SolarNetworkManager::update() {
+    static bool stgUpdate = false;
     updateWifiSwitch();
     checkWiFiConnection();
 
@@ -592,8 +640,18 @@ void SolarNetworkManager::update() {
     if (onlineState && (now - lastTelemetrySendMs >= TELEMETRY_SEND_INTERVAL_MS)) {
         lastTelemetrySendMs = now;
 #if ENABLE_FIREBASE
+        static bool stg = false;
         sendFirebaseTelemetry();
         readFirebaseCommands();
 #endif
     }
+
+    static unsigned long lastHbMs = 0;
+    if (now - lastHbMs >= 10000) {
+        lastHbMs = now;
+        ESP_LOGI(NET_TAG, "HB online=%d wifi=%d rssi=%d angle=%.1f mode=%s",
+                 onlineState, WiFi.status() == WL_CONNECTED, WiFi.RSSI(),
+                 (double)tracker.getCurrentAngle(), tracker.getModeString());
+    }
 }
+
