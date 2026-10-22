@@ -1,6 +1,6 @@
 <mxfile host="Electron">
   <diagram name="Page-1" id="gh66gzMLXR5X-5GsQK5L">
-    <mxGraphModel dx="1024" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1205" dy="736" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -26,7 +26,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MpMlyN4rlC0bKA6JPWzw-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Solar Panel&lt;br&gt;AK140x45&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="60" width="120" x="740" y="470" as="geometry" />
+          <mxGeometry height="60" width="120" x="720" y="590" as="geometry" />
         </mxCell>
         <mxCell id="MpMlyN4rlC0bKA6JPWzw-7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Mobile/Webapp" vertex="1">
           <mxGeometry height="60" width="120" x="580" y="30" as="geometry" />
@@ -44,22 +44,28 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MpMlyN4rlC0bKA6JPWzw-11" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="18650 mAh Cell" vertex="1">
-          <mxGeometry height="60" width="120" x="740" y="240" as="geometry" />
+          <mxGeometry height="60" width="120" x="720" y="340" as="geometry" />
         </mxCell>
-        <mxCell id="Js-Qxxil8AJlHZunt8oy-2" edge="1" parent="1" source="MpMlyN4rlC0bKA6JPWzw-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="MpMlyN4rlC0bKA6JPWzw-1">
+        <mxCell id="eLXuZCEixR_yWoXxLI7s-2" edge="1" parent="1" source="MpMlyN4rlC0bKA6JPWzw-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="eLXuZCEixR_yWoXxLI7s-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="MpMlyN4rlC0bKA6JPWzw-12" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="MT3608" vertex="1">
-          <mxGeometry height="60" width="120" x="550" y="240" as="geometry" />
+          <mxGeometry height="60" width="120" x="640" y="240" as="geometry" />
         </mxCell>
         <mxCell id="MpMlyN4rlC0bKA6JPWzw-16" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="TP 4056&lt;br&gt;Charger" vertex="1">
-          <mxGeometry height="60" width="120" x="740" y="360" as="geometry" />
+          <mxGeometry height="60" width="120" x="720" y="465" as="geometry" />
         </mxCell>
         <mxCell id="OdmWyWENiSjWtucmOPCz-3" edge="1" parent="1" source="OdmWyWENiSjWtucmOPCz-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="MpMlyN4rlC0bKA6JPWzw-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="OdmWyWENiSjWtucmOPCz-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="LM393 Photosensitive LDR Sensor Module (4 pin)" vertex="1">
           <mxGeometry height="70" width="150" x="105" y="235" as="geometry" />
+        </mxCell>
+        <mxCell id="eLXuZCEixR_yWoXxLI7s-3" edge="1" parent="1" source="eLXuZCEixR_yWoXxLI7s-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="MpMlyN4rlC0bKA6JPWzw-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eLXuZCEixR_yWoXxLI7s-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Tụ áp" vertex="1">
+          <mxGeometry height="60" width="120" x="470" y="240" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
