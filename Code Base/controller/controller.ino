@@ -36,6 +36,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <Preferences.h>
 #include <ESP32Servo.h>
 
 #define ENABLE_FIREBASE 1
@@ -108,6 +109,7 @@
 #define FIREBASE_AUTH "XURINmjqSrUgYAs1B7TjQbZoe8Nn151O8BWGRKYs"
 #define FB_TELEMETRY_PATH "/solar_controller/telemetry"
 #define FB_CONFIG_PATH "/solar_controller/config"
+#define FB_COMMAND_PATH "/solar_controller/command"
 #endif
 
 // ==============================================================================
@@ -154,6 +156,11 @@ bool sensorFault = false;
 bool lowBattery = false;
 bool offlineMode = true;
 bool parkSleepPending = false;
+
+Preferences prefs;
+String wifiSsid = WIFI_SSID;
+String wifiPass = WIFI_PASSWORD;
+String serialBuf = "";
 
 const char *lastAction = "INIT";
 unsigned long lastDisplayMs = 0;
@@ -342,23 +349,84 @@ void alarmUpdate() {
 // 7. WI-FI / FIREBASE
 // ==============================================================================
 
-#if ENABLE_FIREBASE
+void wifiLoadPrefs() {
+    prefs.begin("solarcfg", false);
+    wifiSsid = prefs.getString("wifi_ssid", WIFI_SSID);
+    wifiPass = prefs.getString("wifi_pass", WIFI_PASSWORD);
+    prefs.end();
+    if (wifiSsid.length() == 0) wifiSsid = WIFI_SSID;
+    Serial.printf("[WIFI] NVS ssid=%s\n", wifiSsid.c_str());
+}
 
-void wifiBegin() {
-    Serial.printf("[WIFI] ket noi %s ", WIFI_SSID);
+bool wifiSavePrefs(const String &ssid, const String &pass) {
+    prefs.begin("solarcfg", false);
+    bool ok = prefs.putString("wifi_ssid", ssid) > 0;
+    ok = (prefs.putString("wifi_pass", pass) >= 0) && ok;
+    prefs.end();
+    return ok;
+}
+
+bool wifiConnect(const String &ssid, const String &pass, unsigned long timeoutMs) {
+    Serial.printf("[WIFI] ket noi %s ", ssid.c_str());
     WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.begin(ssid.c_str(), pass.c_str());
     unsigned long t0 = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - t0 < WIFI_CONNECT_TIMEOUT_MS) {
+    while (WiFi.status() != WL_CONNECTED && millis() - t0 < timeoutMs) {
         delay(200);
         Serial.print('.');
     }
     Serial.println();
     if (WiFi.status() == WL_CONNECTED) {
         Serial.printf("[WIFI] OK IP=%s\n", WiFi.localIP().toString().c_str());
-    } else {
-        Serial.println("[WIFI] FAIL -> offline mode");
+        return true;
     }
+    Serial.println("[WIFI] FAIL");
+    return false;
+}
+
+// Doi WiFi tu Serial hoac Cloud. Luu NVS; sai mat khau -> khoi phuc WiFi cu.
+bool wifiApply(const String &ssidIn, const String &passIn) {
+    String ssid = ssidIn;
+    ssid.trim();
+    if (ssid.length() == 0) {
+        Serial.println("[WIFI] APPLY FAIL ssid rong");
+        return false;
+    }
+    if (ssid == wifiSsid && passIn == wifiPass && WiFi.status() == WL_CONNECTED) {
+        Serial.printf("[WIFI] APPLY OK ip=%s (khong doi)\n", WiFi.localIP().toString().c_str());
+        offlineMode = false;
+        return true;
+    }
+
+    String oldSsid = wifiSsid;
+    String oldPass = wifiPass;
+    wifiSsid = ssid;
+    wifiPass = passIn;
+    wifiSavePrefs(wifiSsid, wifiPass);
+
+    WiFi.disconnect(true);
+    delay(200);
+    bool ok = wifiConnect(wifiSsid, wifiPass, 20000);
+    if (!ok) {
+        Serial.println("[WIFI] khoi phuc WiFi cu");
+        wifiSsid = oldSsid;
+        wifiPass = oldPass;
+        wifiSavePrefs(wifiSsid, wifiPass);
+        wifiConnect(wifiSsid, wifiPass, 15000);
+        offlineMode = WiFi.status() != WL_CONNECTED;
+        Serial.println("[WIFI] APPLY FAIL");
+        return false;
+    }
+    offlineMode = false;
+    Serial.printf("[WIFI] APPLY OK ip=%s\n", WiFi.localIP().toString().c_str());
+    return true;
+}
+
+#if ENABLE_FIREBASE
+
+void wifiBegin() {
+    wifiConnect(wifiSsid, wifiPass, WIFI_CONNECT_TIMEOUT_MS);
+    if (WiFi.status() != WL_CONNECTED) Serial.println("[WIFI] offline mode");
 }
 
 void firebaseInit() {
@@ -389,16 +457,7 @@ void connectivityCheck() { // flowchart: WiFi & Firebase Connected & Available?
     }
 }
 
-void dashboardCommand() { // flowchart: Dashboard command
-    if (offlineMode) return;
-    unsigned long now = millis();
-    if (now - lastConfigReadMs < CONFIG_READ_INTERVAL_MS) return;
-    lastConfigReadMs = now;
-
-    if (!Firebase.RTDB.getJSON(&fbdo, FB_CONFIG_PATH)) return;
-    JsonDocument doc;
-    if (deserializeJson(doc, fbdo.payload()) != DeserializationError::Ok) return;
-
+void applyConfigDoc(JsonDocument &doc, const char *path) { // Dashboard command
     if (doc["mode"].is<const char *>()) {
         String m = doc["mode"].as<String>();
         m.toUpperCase();
@@ -407,6 +466,37 @@ void dashboardCommand() { // flowchart: Dashboard command
     if (doc["manual_angle"].is<int>()) {
         manualAngle = constrain(doc["manual_angle"].as<int>(), SERVO_EAST_ANGLE, SERVO_WEST_ANGLE);
     }
+    if (doc["angle"].is<int>()) { // Dashboard gui command {mode, angle}
+        manualAngle = constrain(doc["angle"].as<int>(), SERVO_EAST_ANGLE, SERVO_WEST_ANGLE);
+    }
+
+    String newSsid = doc["wifi_ssid"] | "";
+    String newPass = doc["wifi_pass"] | "";
+    newSsid.trim();
+    if (newSsid.length() > 0) {
+        Serial.printf("[NET] nhan WiFi tu cloud ssid=%s\n", newSsid.c_str());
+        wifiApply(newSsid, newPass);
+        String base = String(path);
+        Firebase.RTDB.setString(&fbdo, base + "/wifi_ssid", "");
+        Firebase.RTDB.setString(&fbdo, base + "/wifi_pass", "");
+    }
+}
+
+void readCloudConfig(const char *path) {
+    if (!Firebase.RTDB.getJSON(&fbdo, path)) return;
+    JsonDocument doc;
+    if (deserializeJson(doc, fbdo.payload()) != DeserializationError::Ok) return;
+    applyConfigDoc(doc, path);
+}
+
+void dashboardCommand() { // flowchart: Dashboard command
+    if (offlineMode) return;
+    unsigned long now = millis();
+    if (now - lastConfigReadMs < CONFIG_READ_INTERVAL_MS) return;
+    lastConfigReadMs = now;
+
+    readCloudConfig(FB_CONFIG_PATH);
+    readCloudConfig(FB_COMMAND_PATH);
 }
 
 void sendTelemetry(const char *stage) {
@@ -428,6 +518,7 @@ void sendTelemetry(const char *stage) {
     json.set("angle", currentAngle);
     json.set("servo_on", servoAttached ? 1 : 0);
     json.set("vbat", (double)((int)(vbat * 100)) / 100.0);
+    json.set("voltage", (double)((int)(vbat * 100)) / 100.0); // alias cho dashboard
     json.set("soc", (double)((int)(soc * 10)) / 10.0);
     json.set("charge", chargeStr());
     json.set("fault", sensorFault ? 1 : 0);
@@ -435,6 +526,8 @@ void sendTelemetry(const char *stage) {
     json.set("offline", offlineMode ? 1 : 0);
     json.set("stage", stage);
     json.set("rssi", WiFi.RSSI());
+    json.set("wifi_ssid", wifiSsid);
+    json.set("wifi_ip", WiFi.localIP().toString());
     json.set("uptime_s", (uint32_t)(millis() / 1000));
 
     if (!Firebase.RTDB.setJSON(&fbdo, FB_TELEMETRY_PATH, &json)) {
@@ -476,26 +569,75 @@ void printState() {
 
 void printHelp() {
     Serial.println();
-    Serial.println("--- LENH SERIAL ---");
-    Serial.println(" h : tro giup");
-    Serial.println(" a : che do AUTO");
-    Serial.println(" m : che do MANUAL");
-    Serial.println(" + / - : dieu chinh goc MANUAL");
-    Serial.println(" p : in trang thai hien tai");
-    Serial.println("--------------------");
+    Serial.println("--- LENH SERIAL (ket thuc bang Enter) ---");
+    Serial.println(" h              : tro giup");
+    Serial.println(" a              : che do AUTO");
+    Serial.println(" m              : che do MANUAL");
+    Serial.println(" angle <0..180> : dat goc MANUAL");
+    Serial.println(" + / -          : dieu chinh goc MANUAL 5 do");
+    Serial.println(" p              : in trang thai hien tai");
+    Serial.println(" wifi|<ssid>|<pass> : doi WiFi, luu NVS");
+    Serial.println("-----------------------------------------");
+}
+
+void processSerialCommand(String line) {
+    line.trim();
+    if (line.length() == 0) return;
+    String lower = line;
+    lower.toLowerCase();
+
+    if (lower == "h" || lower == "help") {
+        printHelp();
+    } else if (lower == "a" || lower == "auto") {
+        runMode = MODE_AUTO;
+        Serial.println("[MODE] AUTO");
+    } else if (lower == "m" || lower == "manual") {
+        runMode = MODE_MANUAL;
+        Serial.println("[MODE] MANUAL");
+    } else if (lower == "+") {
+        runMode = MODE_MANUAL;
+        servoWriteAngle(currentAngle + 5);
+        Serial.printf("[ANGLE] %d\n", currentAngle);
+    } else if (lower == "-") {
+        runMode = MODE_MANUAL;
+        servoWriteAngle(currentAngle - 5);
+        Serial.printf("[ANGLE] %d\n", currentAngle);
+    } else if (lower == "p" || lower == "status") {
+        printState();
+    } else if (lower.startsWith("angle ")) {
+        int a = lower.substring(6).toInt();
+        runMode = MODE_MANUAL;
+        manualAngle = constrain(a, SERVO_EAST_ANGLE, SERVO_WEST_ANGLE);
+        servoWriteAngle(manualAngle);
+        Serial.printf("[ANGLE] %d\n", currentAngle);
+    } else if (lower.startsWith("wifi|")) {
+        int p1 = line.indexOf('|');
+        int p2 = line.indexOf('|', p1 + 1);
+        if (p1 < 0 || p2 < 0) {
+            Serial.println("[WIFI] APPLY FAIL format wifi|<ssid>|<pass>");
+            return;
+        }
+        String ssid = line.substring(p1 + 1, p2);
+        String pass = line.substring(p2 + 1);
+        ssid.trim();
+        Serial.printf("[WIFI] nhan lenh Serial ssid=%s\n", ssid.c_str());
+        wifiApply(ssid, pass);
+    } else if (lower == "wifi") {
+        Serial.println("[WIFI] dung: wifi|<ssid>|<pass>");
+    } else {
+        Serial.printf("[CMD] khong hieu: %s\n", line.c_str());
+    }
 }
 
 void handleSerial() {
     while (Serial.available() > 0) {
-        int c = Serial.read();
-        switch (c) {
-            case 'h': case 'H': printHelp(); break;
-            case 'a': case 'A': runMode = MODE_AUTO; Serial.println("[MODE] AUTO"); break;
-            case 'm': case 'M': runMode = MODE_MANUAL; Serial.println("[MODE] MANUAL"); break;
-            case '+': runMode = MODE_MANUAL; servoWriteAngle(currentAngle + 5); Serial.printf("[ANGLE] %d\n", currentAngle); break;
-            case '-': runMode = MODE_MANUAL; servoWriteAngle(currentAngle - 5); Serial.printf("[ANGLE] %d\n", currentAngle); break;
-            case 'p': case 'P': printState(); break;
-            default: break;
+        char c = (char)Serial.read();
+        if (c == '\r') continue;
+        if (c == '\n') {
+            processSerialCommand(serialBuf);
+            serialBuf = "";
+        } else if (serialBuf.length() < 192) {
+            serialBuf += c;
         }
     }
 }
@@ -533,10 +675,13 @@ void setup() {
     panelServo.write(SERVO_CENTER);
     currentAngle = SERVO_CENTER;
 
+    wifiLoadPrefs();
 #if ENABLE_FIREBASE
     wifiBegin();
     if (WiFi.status() == WL_CONNECTED) firebaseInit();
     offlineMode = WiFi.status() != WL_CONNECTED;
+#else
+    offlineMode = true;
 #endif
 
     readSensors();

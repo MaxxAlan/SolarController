@@ -1,0 +1,20 @@
+{
+  "serial": {
+    "port": "auto",
+    "baudrate": 115200,
+    "timeout": 1.0,
+    "auto_detect": true
+  },
+  "firebase": {
+    "url": "https://solarcontroller-1cc93-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "auth": "XURINmjqSrUgYAs1B7TjQbZoe8Nn151O8BWGRKYs",
+    "telemetry_path": "/solar_controller/telemetry",
+    "command_path": "/solar_controller/command",
+    "config_path": "/solar_controller/config",
+    "enabled": true
+  },
+  "monitor": {
+    "refresh_rate_hz": 2.0,
+    "stale_timeout_sec": 8.0
+  }
+}
