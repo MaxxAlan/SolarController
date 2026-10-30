@@ -377,6 +377,102 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* --- Bảng cấu hình chuyển động (servo continuous) --- */
+.motion-table {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    margin-bottom: 12px;
+}
+.motion-row {
+    display: grid;
+    grid-template-columns: 40px 76px 1fr 58px 52px;
+    gap: 6px;
+    align-items: center;
+    padding: 6px 0;
+}
+.motion-head {
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+}
+.motion-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--primary-bright);
+}
+.motion-ms, .motion-dir {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+.motion-row .btn-preset { padding: 6px 2px; font-size: 0.72rem; }
+
+/* Hướng dẫn + đồng hồ đo trực tiếp */
+.motion-guide {
+    background: rgba(245, 158, 11, 0.07);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 0.76rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+.motion-guide code {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: var(--primary-bright);
+}
+.motion-live {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 10px;
+}
+.motion-live.active {
+    color: #fff;
+    border-color: var(--danger);
+    background: rgba(239, 68, 68, 0.12);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+}
+.motion-measure.recording {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+    animation: recPulse 1s infinite;
+}
+@keyframes recPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+.motion-global {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.motion-global label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+.motion-global .form-input { padding: 6px 8px; font-size: 0.85rem; }
+
 .btn-preset {
     padding: 10px;
     background: rgba(255, 255, 255, 0.04);

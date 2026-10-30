@@ -66,13 +66,13 @@
 
             <div class="col-lg-3">
                 <div class="section-head">
-                    <h2 class="section-title">Góc Xoay Servo</h2>
+                    <h2 class="section-title">Trạng Thái Servo</h2>
                     <span class="mode-tag" id="tagMode">—</span>
                 </div>
                 <div class="big-value">
-                    <span id="valCurAngle">—</span><span class="big-unit">°</span>
+                    <span id="valCurAngle">—</span>
                 </div>
-                <div class="text-secondary small mt-1">Giá trị đọc từ <code>telemetry.angle</code></div>
+                <div class="text-secondary small mt-1">Nguồn: <code>telemetry.moving</code> / <code>move_target</code></div>
             </div>
 
             <div class="col-lg-5">
@@ -188,32 +188,77 @@
             </button>
         </div>
 
-        <div class="manual-controls-section" id="manualSection">
-            <span class="section-label">Điều chỉnh góc quay thủ công</span>
-            <div class="slider-container">
-                <div class="slider-readout">
-                    <span>Góc chọn:</span>
-                    <strong id="lblSliderVal">90°</strong>
+        <div class="manual-controls-section" id="motionSection">
+            <span class="section-label">Hiệu chỉnh thời gian chạy (máy tự đo, không phải đếm tay)</span>
+
+            <div class="motion-guide">
+                <b>Cách dùng:</b><br>
+                1. Bấm <b>Về home</b> → servo quay CCW; vừa chạm mốc TL thì bấm <b>■ GHI</b> → lưu <code>home_ms</code>.<br>
+                2. Bấm <b>▶ Đo</b> ở hướng cần đo → servo quay liên tục; vừa đúng hướng bấm <b>■ GHI</b> → web lưu số ms rồi tự về home.<br>
+                3. Bấm <b>Chạy</b> để kiểm tra: về home → chạy đúng số ms đã lưu.
+            </div>
+
+            <div class="motion-live" id="motionLive">Sẵn sàng</div>
+
+            <div class="motion-table">
+                <div class="motion-row motion-head">
+                    <span>Hướng</span><span>Chiều</span><span>ms</span><span>Đo</span><span>Chạy</span>
                 </div>
-                <input type="range" id="angleSliderInput" min="20" max="160" value="90"
-                       oninput="handleSliderInput(this.value)">
-                <div class="slider-marks">
-                    <span>20°</span><span>55°</span><span>90°</span><span>125°</span><span>160°</span>
+                <div class="motion-row">
+                    <span class="motion-name">TL</span>
+                    <select class="form-input motion-dir" id="dirTL">
+                        <option value="1">CW</option>
+                        <option value="-1">CCW</option>
+                    </select>
+                    <input type="number" class="form-input motion-ms" id="msTL" min="0" max="20000" step="50" value="0">
+                    <button class="btn-preset motion-measure" id="btnMeasureTL" onclick="toggleMeasure('TL')">▶ Đo</button>
+                    <button class="btn-preset" onclick="runMotion('TL')">Chạy</button>
+                </div>
+                <div class="motion-row">
+                    <span class="motion-name">TR</span>
+                    <select class="form-input motion-dir" id="dirTR">
+                        <option value="1">CW</option>
+                        <option value="-1">CCW</option>
+                    </select>
+                    <input type="number" class="form-input motion-ms" id="msTR" min="0" max="20000" step="50" value="1000">
+                    <button class="btn-preset motion-measure" id="btnMeasureTR" onclick="toggleMeasure('TR')">▶ Đo</button>
+                    <button class="btn-preset" onclick="runMotion('TR')">Chạy</button>
+                </div>
+                <div class="motion-row">
+                    <span class="motion-name">BL</span>
+                    <select class="form-input motion-dir" id="dirBL">
+                        <option value="1">CW</option>
+                        <option value="-1">CCW</option>
+                    </select>
+                    <input type="number" class="form-input motion-ms" id="msBL" min="0" max="20000" step="50" value="3000">
+                    <button class="btn-preset motion-measure" id="btnMeasureBL" onclick="toggleMeasure('BL')">▶ Đo</button>
+                    <button class="btn-preset" onclick="runMotion('BL')">Chạy</button>
+                </div>
+                <div class="motion-row">
+                    <span class="motion-name">BR</span>
+                    <select class="form-input motion-dir" id="dirBR">
+                        <option value="1">CW</option>
+                        <option value="-1">CCW</option>
+                    </select>
+                    <input type="number" class="form-input motion-ms" id="msBR" min="0" max="20000" step="50" value="2000">
+                    <button class="btn-preset motion-measure" id="btnMeasureBR" onclick="toggleMeasure('BR')">▶ Đo</button>
+                    <button class="btn-preset" onclick="runMotion('BR')">Chạy</button>
                 </div>
             </div>
-            <div class="d-flex gap-2 mb-3">
-                <button class="btn btn-warning btn-sm fw-semibold flex-fill"
-                        onclick="applyManualAngle(document.getElementById('angleSliderInput').value)">
-                    Gửi góc đã chọn
-                </button>
+
+            <div class="motion-global">
+                <label>Home (ms)<input type="number" class="form-input" id="cfgHomeMs" min="0" max="20000" step="100" value="3000"></label>
+                <label>CW (µs)<input type="number" class="form-input" id="cfgCwUs" min="1200" max="2400" step="10" value="2400"></label>
+                <label>CCW (µs)<input type="number" class="form-input" id="cfgCcwUs" min="500" max="1800" step="10" value="500"></label>
+                <label>Stop (µs)<input type="number" class="form-input" id="cfgStopUs" min="1000" max="2000" step="5" value="1500"></label>
             </div>
-            <span class="section-label">Vị trí cố định nhanh</span>
-            <div class="preset-grid">
-                <button class="btn-preset" onclick="sendPresetAngle(20)">🌅 Đông (20°)</button>
-                <button class="btn-preset" onclick="sendPresetAngle(90)">☀️ Chính Ngọ (90°)</button>
-                <button class="btn-preset" onclick="sendPresetAngle(160)">🌇 Tây (160°)</button>
-                <button class="btn-preset btn-danger-soft" onclick="sendPresetAngle(20)">🛡️ Safe Park</button>
+
+            <div class="d-flex gap-2 mb-2">
+                <button class="btn btn-warning btn-sm fw-semibold flex-fill" id="btnSaveMotion">Lưu cấu hình</button>
+                <button class="btn btn-outline-light btn-sm" id="btnRunHome">Về home</button>
+                <button class="btn btn-outline-danger btn-sm" id="btnStopServo">Dừng</button>
             </div>
+            <div class="form-status" id="motionStatus"></div>
         </div>
     </section>
 </main>

@@ -158,10 +158,20 @@ function onTelemetryReceived(data) {
 
     const has = v => v !== undefined && v !== null;
 
-    // 1. Góc servo (angle) + mode — thiếu = chưa đấu sensor thật
-    const angle = has(data.angle) ? data.angle : null;
-    document.getElementById('valCurAngle').innerText = angle !== null ? angle : '—';
-    if (angle !== null) update3DTracker(angle, data);
+    handleMotionTelemetry(data);
+
+    // Cấu hình chuyển động echo từ ESP -> điền bảng (trừ khi đang gõ/đang đo)
+    if (!measuring && !pendingStop && Date.now() > cfgLockUntil) {
+        const ae = document.activeElement;
+        if (!ae || !ae.closest || !ae.closest('#motionSection')) applyMotionConfig(data);
+    }
+
+    // 1. Servo continuous: trạng thái chạy + hướng đích (không có góc thật)
+    const target = data.move_target || '-';
+    const isMoving = data.moving === 1 || data.moving === true;
+    document.getElementById('valCurAngle').innerText =
+        isMoving ? `▶ ${target}` : (target === '-' ? '■ DỪNG' : `■ ${target}`);
+    update3DTracker(targetToAngle(target), data);
 
     const tagMode = document.getElementById('tagMode');
     if (has(data.mode)) {
@@ -172,15 +182,12 @@ function onTelemetryReceived(data) {
 
         const btnAuto = document.getElementById('btnAutoMode');
         const btnManual = document.getElementById('btnManualMode');
-        const manualSection = document.getElementById('manualSection');
         if (isAuto) {
             btnAuto.classList.add('active');
             btnManual.classList.remove('active');
-            manualSection.classList.add('disabled');
         } else {
             btnAuto.classList.remove('active');
             btnManual.classList.add('active');
-            manualSection.classList.remove('disabled');
         }
     } else {
         tagMode.innerText = 'CHƯA CÓ SENSOR';
@@ -245,6 +252,9 @@ function sendCommand(cmdPayload) {
     syncStatus.innerText = 'Đang gửi...';
     syncStatus.style.color = 'var(--primary-bright)';
 
+    // Thêm timestamp để firmware biết command mới hay cũ
+    cmdPayload.timestamp = Date.now();
+
     if (firebaseDb) {
         firebaseDb.ref('/solar_controller/command').set(cmdPayload)
             .then(() => {
@@ -265,18 +275,203 @@ function setSystemMode(mode) {
     sendCommand({ mode: mode });
 }
 
-function handleSliderInput(val) {
-    document.getElementById('lblSliderVal').innerText = val + '°';
+// ==============================================================================
+// 4b. CẤU HÌNH CHUYỂN ĐỘNG (servo continuous — thời gian chạy thực tế)
+// ==============================================================================
+const MOTION_DIRS = ['TL', 'TR', 'BL', 'BR'];
+
+function applyMotionConfig(cfg) {
+    if (!cfg) return;
+    const setVal = (id, v) => {
+        const el = document.getElementById(id);
+        if (el && v !== undefined && v !== null) el.value = v;
+    };
+    MOTION_DIRS.forEach(d => {
+        const key = d.toLowerCase();
+        setVal('ms' + d, cfg[key + '_ms']);
+        setVal('dir' + d, cfg[key + '_dir']);
+    });
+    setVal('cfgHomeMs', cfg.home_ms);
+    setVal('cfgCwUs', cfg.cw_us);
+    setVal('cfgCcwUs', cfg.ccw_us);
+    setVal('cfgStopUs', cfg.stop_us);
 }
 
-function applyManualAngle(val) {
-    sendCommand({ mode: 'MANUAL', angle: parseInt(val, 10) });
+function collectMotionConfig() {
+    const num = (id, def) => {
+        const el = document.getElementById(id);
+        const v = el ? parseInt(el.value, 10) : NaN;
+        return Number.isFinite(v) ? v : def;
+    };
+    const cfg = {
+        home_ms: num('cfgHomeMs', 3000),
+        cw_us: num('cfgCwUs', 2400),
+        ccw_us: num('cfgCcwUs', 500),
+        stop_us: num('cfgStopUs', 1500),
+        timestamp: Date.now()
+    };
+    MOTION_DIRS.forEach(d => {
+        const key = d.toLowerCase();
+        cfg[key + '_ms'] = num('ms' + d, 0);
+        cfg[key + '_dir'] = num('dir' + d, 1);
+    });
+    return cfg;
 }
 
-function sendPresetAngle(val) {
-    document.getElementById('angleSliderInput').value = val;
-    handleSliderInput(val);
-    sendCommand({ mode: 'MANUAL', angle: val });
+function setMotionStatus(text, ok) {
+    const el = document.getElementById('motionStatus');
+    if (!el) return;
+    el.innerText = text;
+    el.className = 'form-status ' + (ok ? 'ok' : 'danger');
+}
+
+function saveMotionConfig(quiet) {
+    if (!firebaseDb) {
+        setMotionStatus('Chưa kết nối Cloud — không lưu được.', false);
+        return Promise.reject(new Error('no-db'));
+    }
+    // Gửi qua /command (rules cho phép ghi); ESP lưu NVS + echo lại trong telemetry
+    cfgLockUntil = Date.now() + 5000;
+    sendCommand(collectMotionConfig());
+    if (!quiet) setMotionStatus('Đã gửi cấu hình. ESP áp dụng trong ~1s.', true);
+    return Promise.resolve();
+}
+
+// Lưu cấu hình hiện tại rồi ra lệnh chạy: về home -> tới hướng đích
+function runMotion(target) {
+    setMotionStatus('Đang gửi lệnh ' + target + '...', true);
+    cfgLockUntil = Date.now() + 5000;
+    sendCommand(Object.assign(collectMotionConfig(), { mode: 'MANUAL', move: target }));
+    setMotionStatus('Đã gửi: home → ' + target + '. Theo dõi "Trạng Thái Servo".', true);
+}
+
+function runHome() {
+    sendCommand(Object.assign(collectMotionConfig(), { mode: 'MANUAL', move: 'HOME' }));
+    setMotionStatus('Đang về home (TL).', true);
+}
+
+function stopServo() {
+    sendCommand({ mode: 'MANUAL', stop: true });
+    setMotionStatus('Đã gửi lệnh DỪNG.', true);
+}
+
+// -----------------------------------------------------------------------------
+// ĐO THỜI GIAN: bấm Đo -> servo quay liên tục; bấm GHI -> dừng, ESP trả last_ms
+// -----------------------------------------------------------------------------
+let measuring = null;      // 'TL'|'TR'|'BL'|'BR'|'HOME' đang đo
+let pendingStop = null;    // {target, seq} chờ telemetry báo số ms mới
+let measureT0 = 0;
+let measureTimer = null;
+let lastMoveSeq = 0;
+let autoHomeAfterRecord = true;
+let cfgLockUntil = 0; // chặn echo telemetry ghi đè giá trị vừa lưu (5s)
+
+function measureBtn(target) {
+    return document.getElementById('btnMeasure' + target);
+}
+
+function setLiveText(text, active) {
+    const el = document.getElementById('motionLive');
+    if (!el) return;
+    el.innerText = text;
+    el.classList.toggle('active', !!active);
+}
+
+function startMeasure(target) {
+    if (measuring) return;
+    measuring = target;
+    measureT0 = Date.now();
+    const btn = measureBtn(target);
+    if (btn) {
+        btn.classList.add('recording');
+        btn.innerText = '■ GHI';
+    }
+    setLiveText(`${target}: 0 ms — bấm ■ GHI khi vừa đúng vị trí`, true);
+    measureTimer = setInterval(() => {
+        setLiveText(`${measuring || target}: ${Date.now() - measureT0} ms — bấm ■ GHI khi vừa đúng vị trí`, true);
+    }, 100);
+    sendCommand({ mode: 'MANUAL', run: target });
+}
+
+function stopMeasure() {
+    const target = measuring;
+    if (!target) return;
+    measuring = null;
+    if (measureTimer) { clearInterval(measureTimer); measureTimer = null; }
+    const btn = measureBtn(target);
+    if (btn) {
+        btn.classList.remove('recording');
+        btn.innerText = '▶ Đo';
+    }
+    pendingStop = { target: target, seq: lastMoveSeq };
+    sendCommand({ mode: 'MANUAL', stop: true });
+    setLiveText(`${target}: đang chờ số ms từ ESP...`, true);
+}
+
+function toggleMeasure(target) {
+    if (measuring === target) stopMeasure();
+    else if (!measuring) startMeasure(target);
+    else setMotionStatus(`Đang đo ${measuring}. Bấm ■ GHI để dừng trước.`, false);
+}
+
+function abortMeasure() { // nút Dừng: hủy đo, không ghi số
+    if (measuring) {
+        const btn = measureBtn(measuring);
+        if (btn) { btn.classList.remove('recording'); btn.innerText = '▶ Đo'; }
+        measuring = null;
+        if (measureTimer) { clearInterval(measureTimer); measureTimer = null; }
+    }
+    pendingStop = null;
+}
+
+// Gọi từ onTelemetryReceived: nhận last_ms của lần chạy vừa dừng
+function handleMotionTelemetry(data) {
+    if (typeof data.move_seq === 'number') {
+        if (data.move_seq > lastMoveSeq) lastMoveSeq = data.move_seq;
+    }
+    if (!pendingStop) return;
+    if (data.moving === 1) return;
+    if (typeof data.move_seq !== 'number') return;
+    if (data.move_seq <= pendingStop.seq) return;
+    if (data.last_target !== pendingStop.target) return;
+
+    const ms = parseInt(data.last_ms, 10) || 0;
+    const target = pendingStop.target;
+    pendingStop = null;
+    if (ms < 50) {
+        setLiveText(`${target}: số đo không hợp lệ (${ms} ms)`, false);
+        return;
+    }
+
+    if (target === 'HOME') document.getElementById('cfgHomeMs').value = ms;
+    else document.getElementById('ms' + target).value = ms;
+
+    setLiveText(`✔ ${target} = ${ms} ms — đã lưu`, false);
+    cfgLockUntil = Date.now() + 5000;
+
+    const homeMs = parseInt(document.getElementById('cfgHomeMs').value, 10) || 0;
+    if (autoHomeAfterRecord && target !== 'HOME' && homeMs > 0) {
+        sendCommand(Object.assign(collectMotionConfig(), { mode: 'MANUAL', move: 'HOME' }));
+        setMotionStatus(`✔ Đã lưu ${target} = ${ms} ms. Đang tự về home...`, true);
+    } else {
+        sendCommand(collectMotionConfig());
+        if (autoHomeAfterRecord && target !== 'HOME') {
+            setMotionStatus(`✔ Đã lưu ${target} = ${ms} ms. Chưa có home_ms → hãy đo Home trước.`, false);
+        } else {
+            setMotionStatus(`✔ Đã lưu ${target} = ${ms} ms vào ESP.`, true);
+        }
+    }
+}
+
+// Chỉ dùng cho mô phỏng 3D (servo continuous không có góc thật)
+function targetToAngle(target) {
+    switch (target) {
+        case 'TL': return 90;   // Đông
+        case 'BL': return 180;  // Nam
+        case 'TR': return 270;  // Tây
+        case 'BR': return 0;    // Bắc
+        default: return 90;
+    }
 }
 
 // ==============================================================================
@@ -296,6 +491,13 @@ function setupUIEventListeners() {
     document.getElementById('btnOpenWifi').onclick = openWifiModal;
     document.getElementById('btnCloseWifi').onclick = closeWifiModal;
     document.getElementById('btnCancelWifi').onclick = closeWifiModal;
+
+    const btnSaveMotion = document.getElementById('btnSaveMotion');
+    if (btnSaveMotion) btnSaveMotion.onclick = () => saveMotionConfig(false);
+    const btnRunHome = document.getElementById('btnRunHome');
+    if (btnRunHome) btnRunHome.onclick = runHome;
+    const btnStopServo = document.getElementById('btnStopServo');
+    if (btnStopServo) btnStopServo.onclick = () => { abortMeasure(); stopServo(); };
 
     document.getElementById('btnSaveWifi').onclick = () => {
         const ssid = document.getElementById('wifiSsid').value.trim();
@@ -567,7 +769,8 @@ function animate3D() {
     current3DAngle += (target3DAngle - current3DAngle) * 0.08;
 
     if (trackerRotatingGroup) {
-        const rotationRad = THREE.MathUtils.degToRad(-(current3DAngle - 90));
+        // Servo 360°: 0°=Bắc, 90°=Đông, 180°=Nam, 270°=Tây
+        const rotationRad = THREE.MathUtils.degToRad(-current3DAngle);
         trackerRotatingGroup.rotation.y = rotationRad;
     }
 
