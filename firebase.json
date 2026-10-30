@@ -3,7 +3,7 @@
     "rules": "database.rules.json"
   },
   "hosting": {
-    "public": "Dashboard",
+    "public": "Code Base/web-page/Dashboard",
     "ignore": [
       "firebase.json",
       "**/.*",

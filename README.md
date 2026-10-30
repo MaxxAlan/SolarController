@@ -1,35 +1,32 @@
 # SolarController ☀️🤖
 
-Hệ thống điều khiển và giám sát pin năng lượng mặt trời tự động bám sáng (Dual/Single-Axis Solar Tracker) tích hợp IoT Telemetry và Dashboard.
+Hệ thống điều khiển & giám sát pin năng lượng mặt trời tự động bám sáng (single-axis solar tracker), dùng ESP32-S3 + servo continuous + 4 LDR, telemetry qua Firebase RTDB và dashboard web.
 
 ---
 
 ## 📌 Tính năng chính
 
-- **Tự động bám sáng (Auto Tracking)**: Đo lường cường độ ánh sáng qua 4 cảm biến quang trở (LDR) và điều khiển góc xoay của động cơ Servo bám theo góc chiếu sáng tối ưu.
-- **Chế độ ban đêm (Night Mode)**: Tự động phát hiện khi trời tối, trả tấm pin về vị trí ban đầu (hướng Đông) và chuyển sang chế độ tiết kiệm năng lượng (Low-power standby).
-- **Chế độ thủ công (Manual Mode)**: Cho phép điều khiển góc xoay của tấm pin trực tiếp qua Dashboard (thanh trượt / nút bấm).
-- **Quản lý & Bảo vệ nguồn (Power Management)**:
-  - Tự sạc pin 18650 từ tấm pin mặt trời thông qua module sạc bảo vệ TP4056.
-  - Chống sạc quá mức (Overcharge protection) và tự động duy trì sạc thả nổi (Float charge).
-  - Tự động ngắt động cơ và cảnh báo khi pin chạm ngưỡng cạn kiệt.
-- **Giám sát thời gian thực (IoT Dashboard)**:
-  - Gửi dữ liệu telemetry (Điện áp, Dòng sạc, SOC, Cường độ LDR, Góc servo) qua Wi-Fi / BLE.
-  - Nhận lệnh điều khiển thời gian thực và phát cảnh báo sự cố.
+- **Bám sáng tự động (AUTO)**: so sánh 4 LDR (TL/TR/BL/BR), quay servo theo nhịp `TRACK_PULSE_MS` cho tới khi |diff| < deadband.
+- **Ban đêm**: tổng sáng thấp hơn ngưỡng → park về hướng Đông (TL) → light-sleep tiết kiệm pin.
+- **Thủ công (MANUAL)** từ dashboard: chạy 4 hướng TL/TR/BL/BR, về home, dừng khẩn cấp, chỉnh tay CW/CCW.
+- **Hiệu chỉnh thời gian chạy** (servo continuous không có feedback góc): đo bằng web — bấm **Đo**, servo quay liên tục, vừa đúng vị trí bấm **GHI**; ESP trả `last_ms` + `move_seq`, web lưu rồi tự về home.
+- **Lưu cấu hình vào NVS**: `home_ms`, `tl/tr/bl/br_ms`, `*_dir`, `cw/ccw/stop_us` sống qua reset.
+- **Nguồn**: TP4056 sạc 18650 từ panel, MT3608 boost; đo VBAT qua divider, tính SOC, cảnh báo pin yếu.
+- **CLI Python**: monitor realtime + cấu hình WiFi cho ESP qua Serial/Firebase.
 
 ---
 
 ## 🛠️ Cấu hình phần cứng
 
-- **Vi điều khiển**: ESP32-S3-N16R8
-  - Hỗ trợ 2.4GHz Wi-Fi (802.11 b/g/n) & Bluetooth 5 LE.
-- **Cảm biến quang học**: 4x Module quang trở (LDR Sensor Module with LM393 comparator) kết nối kênh ADC1 (`GPIO 4, 5, 6, 7`).
-- **Động cơ**: Servo Motor (PWM Control trên `GPIO 41`).
-- **Hệ thống nguồn**:
-  - Tấm pin năng lượng mặt trời (Solar Panel)
-  - Mạch sạc & bảo vệ pin TP4056 (Type-C)
-  - Pin Li-ion 18650 mAh
-  - Mạch tăng áp DC-DC Boost Converter MT3608
+| Thành phần | Chi tiết |
+|---|---|
+| Vi điều khiển | ESP32-S3 DevKit N16R8 (Arduino IDE) |
+| LDR | 4x module quang trở LM393, AO → `GPIO4, 5, 6, 7` (ADC1); DO → `GPIO15, 16, 17` |
+| Servo | SG90 **cắt trục** (continuous) — signal `GPIO18`, VCC 5V nguồn ngoài, GND chung |
+| Đo pin | Divider 100k/100k BAT+ → `GPIO8` |
+| Nguồn | Panel → TP4056 → 18650 → MT3608 → 5V/3V3 |
+
+> Servo continuous: `500us` = CCW hết tốc, `1500us` = dừng, `2400us` = CW hết tốc. Vị trí suy ra từ **thời gian chạy**, không đọc được góc thật.
 
 ---
 
@@ -37,31 +34,84 @@ Hệ thống điều khiển và giám sát pin năng lượng mặt trời tự
 
 ```text
 SolarController/
-├── include/                # Header cấu hình (chân, ngưỡng bám sáng, WiFi, Firebase)
-│   └── config.h
-├── src/                    # Mã nguồn C++ cho ESP32-S3 (Tracker, Battery, Network, Main)
-│   ├── main.cpp
-│   ├── tracker.cpp / .h
-│   ├── battery_monitor.cpp / .h
-│   └── network_manager.cpp / .h
-├── Dashboard/              # Web Dashboard giám sát & mô phỏng 3D thời gian thực (Three.js)
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
-├── Cricular Diagram/       # Sơ đồ kết nối phần cứng và mạch nguyên lý
-├── Flow Chart/             # Lưu đồ thuật toán vận hành hệ thống (Draw.io & ảnh PNG)
-├── platformio.ini          # Cấu hình PlatformIO chuẩn cho ESP32-S3-DevKitC-1 N16R8
-├── .gitignore              # Bỏ qua các file build và file tạm
-└── README.md               # Tài liệu giới thiệu dự án
+├── Code Base/
+│   ├── arduino-controller/
+│   │   ├── controller/controller.ino   # Firmware chính (motion-v2)
+│   │   ├── ldr_test/ldr_test.ino       # Test 4 LDR + ADC
+│   │   └── servo_test/servo_test.ino   # Test servo qua Serial
+│   └── web-page/Dashboard/             # Dashboard (Firebase Hosting public)
+│       ├── index.html
+│       ├── app.js
+│       └── style.css
+├── Software/
+│   ├── Arduino_IDE/                    # Script tải IDE / thư viện / mở sketch
+│   ├── main.py                         # Menu CLI
+│   ├── monitor.py                      # Realtime monitor (rich)
+│   ├── wifi_setup.py                   # Cấu hình WiFi ESP32
+│   ├── esp_comm.py                     # Serial + Firebase RTDB
+│   ├── run_servo.py                    # Điều khiển servo nhanh
+│   ├── config.json                     # URL Firebase + COM
+│   ├── requirements.txt
+│   ├── SolarController.bat             # 1-click: tạo .venv + chạy CLI
+│   └── run.bat
+├── Diagram/                            # Sơ đồ nguyên lý, block, flowchart (drawio + png)
+├── Report/                             # Báo cáo DOCX/PDF
+├── firebase.json / database.rules.json / .firebaserc
+└── README.md
 ```
 
 ---
 
-## ⚡ Hướng dẫn nạp Firmware nhanh với PlatformIO
+## ⚡ Chạy nhanh
 
-1. Mở thư mục dự án `SolarController` bằng **VS Code** (đã cài extension **PlatformIO IDE**).
-2. Tùy chỉnh thông tin Wi-Fi và ngưỡng cảm biến tại [`include/config.h`](include/config.h).
-3. Kết nối board ESP32-S3 vào máy tính qua cổng USB (CH343 UART hoặc Native USB).
-4. Bấm nút **Build** (`✔`) và **Upload** (`➡`) trên thanh công cụ PlatformIO ở đáy màn hình VS Code.
-5. Mở **Serial Monitor** (115200 baud) để theo dõi thông số hoặc mở [`Dashboard/index.html`](Dashboard/index.html) để theo dõi mô phỏng 3D & telemetry thời gian thực.
+### 1. Nạp firmware (Arduino IDE)
 
+1. Mở `Code Base/arduino-controller/controller/controller.ino` (hoặc chạy `Software/Arduino_IDE/open_controller_sketch.bat`).
+2. Cài board **ESP32-S3 DevKit** và 3 thư viện: `ESP32Servo`, `ArduinoJson`, `Firebase ESP Client` (script `install_esp32_libraries.bat` hỗ trợ).
+3. Sửa `WIFI_SSID` / `WIFI_PASSWORD` / `FIREBASE_AUTH` ở đầu file nếu cần.
+4. Chọn board **ESP32S3 Dev Module**, Flash 16MB, chọn đúng cổng COM → Upload.
+5. Serial Monitor 115200: `h` = help, `p` = trạng thái, `tl/tr/bl/br` = chạy tới hướng, `run TL` = quay liên tục để đo, `s` = dừng.
+
+### 2. Dashboard web
+
+Mở trực tiếp `Code Base/web-page/Dashboard/index.html`, hoặc deploy:
+
+```bash
+firebase deploy --only hosting,database --project solarcontroller-1cc93
+```
+
+Dashboard đọc `https://.../solar_controller/telemetry` (public read) và ghi lệnh vào `/solar_controller/command` (public write). Firmware dùng legacy token, xoá node command sau khi áp dụng và bỏ qua lệnh có `timestamp` cũ.
+
+### 3. CLI Python
+
+```bat
+Software\SolarController.bat
+```
+
+Lần đầu tự tạo `.venv` và cài `pyserial`, `requests`, `rich`, `colorama`. Menu: `[1]` monitor realtime, `[2]` cấu hình WiFi, `[3]` thoát.
+
+---
+
+## 🔄 Luồng lệnh & telemetry
+
+```text
+Dashboard --(set /solar_controller/command)--> ESP32
+  { mode, move:"TL|TR|BL|BR|HOME", run:"...", stop:true,
+    dir:"CW|CCW", ms, home_ms, tl_ms, ..., timestamp }
+ESP32 --(set /solar_controller/telemetry)--> Dashboard
+  { mode, moving, move_target, move_seq, last_target, last_ms,
+    ldr_*, diff, vbat, soc, charge, fault, wifi_*, fw:"motion-v2", ... }
+```
+
+- Telemetry chỉ ghi khi `mvPhase == MV_IDLE` để không chặn vòng lặp khi servo đang chạy.
+- Khi đang chạy, firmware poll `/command` mỗi 150ms để nhận lệnh DỪNG nhanh.
+
+---
+
+## 🔧 Hiệu chỉnh servo (quan trọng)
+
+1. Về home: bấm **Về home** → servo quay CCW; chạm mốc TL thì bấm **■ GHI** → lưu `home_ms`.
+2. Đo từng hướng: bấm **▶ Đo** ở TL/TR/BL/BR → servo quay liên tục; đúng hướng bấm **■ GHI** → lưu `*_ms`, web tự về home.
+3. Bấm **Chạy** để kiểm tra: home → chạy đúng số ms đã lưu.
+
+Thời gian chạy phụ thuộc pin/servo, nên hiệu chỉnh lại khi thay servo hoặc nguồn.
