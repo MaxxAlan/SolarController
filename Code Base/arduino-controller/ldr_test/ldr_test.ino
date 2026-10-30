@@ -129,7 +129,7 @@ bool firebaseEnabled = true;
 unsigned long lastFirebaseMs = 0;
 FirebaseData fbdo;
 FirebaseConfig fbConfig;
-Auth auth;
+FirebaseAuth auth;
 #endif
 
 // ==============================================================================
@@ -235,7 +235,7 @@ void printBanner() {
     Serial.println("[PIN] TR: AO=GPIO5  DO=GPIO16");
     Serial.println("[PIN] BL: AO=GPIO6  DO=GPIO17");
     Serial.println("[PIN] BR: AO=GPIO7  DO=GPIO18");
-    Serial.println("[NGUONG] NIGHT=" NIGHT_THRESHOLD "  DEADBAND=" DEADBAND_THRESHOLD);
+    Serial.printf("[NGUONG] NIGHT=%d  DEADBAND=%d\n", NIGHT_THRESHOLD, DEADBAND_THRESHOLD);
     Serial.println();
 }
 

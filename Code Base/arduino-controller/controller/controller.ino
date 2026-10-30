@@ -1,7 +1,8 @@
 /* =============================================================================
- *  SolarController - MAIN FIRMWARE  (v1.0.0)
+ *  SolarController - MAIN FIRMWARE  (v2.0.0)
  *  -----------------------------------------------------------------------------
  *  Board : ESP32-S3 DevKit (N16R8) - Arduino IDE
+ *  Servo : SG90 cắt trục → position control 0°-360°
  *  Flow  : Flow Chart/FlowChart.drawio
  *
  *  Start -> Init -> WiFi/Firebase? --NO--> Offline mode --+
@@ -9,8 +10,6 @@
  *              Dashboard command                           |
  *                    |                                     |
  *              Read sensors (LDR + Battery V/SOC) <--------+
- *                    |
- *              Send status (Realtime Telemetry)
  *                    |
  *              Auto mode? --NO--> Manual adjust -----------+
  *                    | YES                                 |
@@ -22,7 +21,12 @@
  *                    | YES                                 |
  *              Rotate toward sun --------------------------+
  *                    |                                     |
- *              Monitor battery/charging -> Update dashboard -> loop
+ *              Monitor battery/charging -> Send Telemetry -> loop
+ *
+ *  La bàn góc quay (nhìn từ trên, chiều kim đồng hồ):
+ *      0° = Bắc  |  90° = Đông  |  180° = Nam  |  270° = Tây
+ *  Park ban đêm = 90° (hướng Đông, đón bình minh)
+ *  Quỹ đạo mặt trời: Đông (90°) → Nam (180°) → Tây (270°)
  *
  *  Đấu chân:
  *      LDR AO : TL=GPIO4  TR=GPIO5  BL=GPIO6  BR=GPIO7   (ADC1)
@@ -31,7 +35,7 @@
  *      VBAT   : GPIO8 (ADC1_CH7) - voltage divider (tỉ lệ VBAT_DIVIDER)
  *      Buzzer : GPIO11 (active), đặt PIN_BUZZER=-1 nếu không gắn
  *
- *  Serial (115200): h=help  a=Auto  m=Manual  +/-=gi angle  p=print state
+ *  Serial (115200): h=help  a=Auto  m=Manual  +/-=dieu chinh angle  p=print state
  * ============================================================================= */
 
 #include <Arduino.h>
@@ -49,7 +53,7 @@
 // 1. CẤU HÌNH
 // ==============================================================================
 
-#define FW_VERSION "1.1.0"
+#define FW_VERSION "2.0.0"
 
 // --- Pin ---
 #define PIN_LDR_TL 4
@@ -83,12 +87,16 @@
 #define SOC_MAX_V 4.2f
 #define CHARGE_FULL_V 4.15f
 
-// --- Servo ---
-#define SERVO_EAST_ANGLE 0 // đỗ ban đêm
-#define SERVO_WEST_ANGLE 180
-#define SERVO_CENTER 90
-#define TRACK_STEP 5 // độ/bước quay
-// Hướng quay: +1 = side trái sáng -> tăng angle (hướng Tây). Đảo nếu lắp ngược.
+// --- Servo (SG90 cắt trục = CONTINUOUS rotation, điều khiển bằng THỜI GIAN) ---
+// Không có feedback vị trí: xung chỉ quyết định tốc độ/chiều.
+//   ~1500us = dừng | 500us = quay CCW hết tốc | 2400us = quay CW hết tốc
+#define SERVO_STOP_US 1500
+#define SERVO_CW_US 2400
+#define SERVO_CCW_US 500
+#define SERVO_SETTLE_MS 250 // nghỉ cơ khí giữa home -> đích
+#define TRACK_PULSE_MS 400  // mỗi nhịp auto tracking chạy bao lâu
+#define TRACK_PAUSE_MS 800  // nghỉ giữa 2 nhịp tracking
+// AUTO tracking: left sáng hơn -> quay CW (tăng hướng Đông->Tây)
 #define TRACK_DIR 1
 
 // --- Chu kỳ (ms) ---
@@ -109,6 +117,7 @@
 #define FIREBASE_AUTH "XURINmjqSrUgYAs1B7TjQbZoe8Nn151O8BWGRKYs"
 #define FB_TELEMETRY_PATH "/solar_controller/telemetry"
 #define FB_CONFIG_PATH "/solar_controller/config"
+#define FB_MOTION_PATH "/solar_controller/config/motion"
 #define FB_COMMAND_PATH "/solar_controller/command"
 #endif
 
@@ -141,11 +150,42 @@ LdrChannel channels[CH_COUNT] = {
 
 Servo panelServo;
 bool servoAttached = false;
-int currentAngle = SERVO_CENTER;
+
+// --- Cấu hình chuyển động (nhập từ web, lưu NVS) ---
+struct MotionCfg {
+    int stopUs;
+    int cwUs;
+    int ccwUs;
+    int homeMs;
+    int tlMs;
+    int trMs;
+    int blMs;
+    int brMs;
+    int tlDir; // +1 = CW, -1 = CCW
+    int trDir;
+    int blDir;
+    int brDir;
+};
+MotionCfg motion = {SERVO_STOP_US, SERVO_CW_US, SERVO_CCW_US, 3000, 0, 1000, 3000, 2000,
+                    1, 1, 1, 1};
+
+enum MovePhase { MV_IDLE, MV_HOME, MV_SETTLE, MV_TARGET, MV_RUN };
+MovePhase mvPhase = MV_IDLE;
+unsigned long mvEndMs = 0;
+unsigned long mvTargetMs = 0;
+unsigned long mvStartMs = 0;
+int mvDir = 1;
+String mvTarget = "-";
+bool moving = false;
+
+// --- Kết quả lần chạy vừa dừng (dùng cho hiệu chỉnh thời gian trên web) ---
+unsigned long lastMoveMs = 0;
+String lastMoveTarget = "-";
+uint32_t moveSeq = 0; // tăng mỗi lần 1 chuyển động kết thúc -> web biết có số mới
 
 enum Mode { MODE_AUTO, MODE_MANUAL };
-Mode runMode = MODE_AUTO;
-int manualAngle = SERVO_CENTER;
+Mode runMode = MODE_MANUAL; // boot: đứng yên tại TL, chỉ chạy khi có lệnh
+int manualAngle = 0;        // giữ để tương thích telemetry cũ (không điều khiển servo)
 
 float vbat = 0.0f;
 float soc = 0.0f;
@@ -176,7 +216,9 @@ FirebaseConfig fbConfig;
 FirebaseAuth auth;
 bool firebaseReady = false;
 String fbMode = "AUTO";
-int fbManualAngle = SERVO_CENTER;
+int fbManualAngle = 0;
+uint64_t lastCmdTimestamp = 0; // tránh áp dụng command cũ (Date.now() ms > 2^32)
+bool cmdApplied = false;
 #endif
 
 // ==============================================================================
@@ -256,7 +298,8 @@ void readSensors() {
     vbat = readVbat();
     soc = calcSoc(vbat);
     sensorFault = sensorFaultNow();
-    lowBattery = vbat > 0.5f && vbat < LOW_BATTERY_V;
+    // < 2.0 V = divider chưa nối / pin không tồn tại -> không báo low-batt giả
+    lowBattery = vbat > 2.0f && vbat < LOW_BATTERY_V;
 }
 
 // flowchart: Monitor Battery Voltage & Charging State
@@ -279,7 +322,7 @@ void monitorBattery() {
 }
 
 // ==============================================================================
-// 5. SERVO  (Manual adjust / Park East / Rotate / Hold / Stop)
+// 5. SERVO CONTINUOUS  (xung = tốc độ, thời gian = quãng đường)
 // ==============================================================================
 
 void servoEnsureAttach() {
@@ -287,15 +330,19 @@ void servoEnsureAttach() {
         ESP32PWM::allocateTimer(0);
         panelServo.setPeriodHertz(50);
         panelServo.attach(PIN_SERVO, SERVO_MIN_US, SERVO_MAX_US);
-        panelServo.write(currentAngle);
         servoAttached = true;
     }
 }
 
-void servoWriteAngle(int angle) {
-    currentAngle = constrain(angle, SERVO_EAST_ANGLE, SERVO_WEST_ANGLE);
+// Ghi trực tiếp xung (us) - KHÔNG dùng write() vì nó kẹp góc > 180
+void servoPulse(int us) {
     servoEnsureAttach();
-    panelServo.write(currentAngle);
+    panelServo.writeMicroseconds(constrain(us, SERVO_MIN_US, SERVO_MAX_US));
+}
+
+void servoStop() {
+    servoPulse(motion.stopUs);
+    moving = false;
 }
 
 void servoStopSafe() { // flowchart: Stop motor completely & switch to safe mode
@@ -303,11 +350,196 @@ void servoStopSafe() { // flowchart: Stop motor completely & switch to safe mode
         panelServo.detach();
         servoAttached = false;
     }
+    moving = false;
+    mvPhase = MV_IDLE;
+    mvTarget = "-";
+}
+
+void motionApplyDoc(JsonDocument &doc) { // /solar_controller/config/motion
+    auto getInt = [&](const char *k, int lo, int hi, int &out) {
+        if (doc[k].is<int>()) out = constrain(doc[k].as<int>(), lo, hi);
+    };
+    getInt("stop_us", 1000, 2000, motion.stopUs);
+    getInt("cw_us", 1200, 2400, motion.cwUs);
+    getInt("ccw_us", 500, 1800, motion.ccwUs);
+    getInt("home_ms", 0, 20000, motion.homeMs);
+    getInt("tl_ms", 0, 20000, motion.tlMs);
+    getInt("tr_ms", 0, 20000, motion.trMs);
+    getInt("bl_ms", 0, 20000, motion.blMs);
+    getInt("br_ms", 0, 20000, motion.brMs);
+    getInt("tl_dir", -1, 1, motion.tlDir);
+    getInt("tr_dir", -1, 1, motion.trDir);
+    getInt("bl_dir", -1, 1, motion.blDir);
+    getInt("br_dir", -1, 1, motion.brDir);
+}
+
+void motionSavePrefs() {
+    prefs.begin("motion", false);
+    prefs.putInt("stop_us", motion.stopUs);
+    prefs.putInt("cw_us", motion.cwUs);
+    prefs.putInt("ccw_us", motion.ccwUs);
+    prefs.putInt("home_ms", motion.homeMs);
+    prefs.putInt("tl_ms", motion.tlMs);
+    prefs.putInt("tr_ms", motion.trMs);
+    prefs.putInt("bl_ms", motion.blMs);
+    prefs.putInt("br_ms", motion.brMs);
+    prefs.putInt("tl_dir", motion.tlDir);
+    prefs.putInt("tr_dir", motion.trDir);
+    prefs.putInt("bl_dir", motion.blDir);
+    prefs.putInt("br_dir", motion.brDir);
+    prefs.end();
+}
+
+void motionLoadPrefs() {
+    prefs.begin("motion", true);
+    motion.stopUs = prefs.getInt("stop_us", motion.stopUs);
+    motion.cwUs = prefs.getInt("cw_us", motion.cwUs);
+    motion.ccwUs = prefs.getInt("ccw_us", motion.ccwUs);
+    motion.homeMs = prefs.getInt("home_ms", motion.homeMs);
+    motion.tlMs = prefs.getInt("tl_ms", motion.tlMs);
+    motion.trMs = prefs.getInt("tr_ms", motion.trMs);
+    motion.blMs = prefs.getInt("bl_ms", motion.blMs);
+    motion.brMs = prefs.getInt("br_ms", motion.brMs);
+    motion.tlDir = prefs.getInt("tl_dir", motion.tlDir);
+    motion.trDir = prefs.getInt("tr_dir", motion.trDir);
+    motion.blDir = prefs.getInt("bl_dir", motion.blDir);
+    motion.brDir = prefs.getInt("br_dir", motion.brDir);
+    prefs.end();
+}
+
+// Chạy 1 nhịp: dir>0 = CW, dir<0 = CCW
+void motionPulse(int dir, unsigned long ms, const char *label) {
+    if (ms == 0) return;
+    servoPulse(dir > 0 ? motion.cwUs : motion.ccwUs);
+    moving = true;
+    mvDir = dir;
+    mvTargetMs = ms;
+    mvTarget = label;
+    mvPhase = MV_TARGET;
+    mvStartMs = millis();
+    mvEndMs = mvStartMs + ms;
+    Serial.printf("[MV] pulse %s dir=%d ms=%lu\n", label, dir, ms);
+}
+
+// Chạy LIÊN TỤC (không tự hết giờ) để người dùng bấm GHI khi vừa đúng vị trí.
+// An toàn: tự dừng sau MOTION_RUN_MAX_MS.
+#define MOTION_RUN_MAX_MS 20000UL
+void motionRun(int dir, const char *label) {
+    servoPulse(dir > 0 ? motion.cwUs : motion.ccwUs);
+    moving = true;
+    mvDir = dir;
+    mvTargetMs = 0;
+    mvTarget = label;
+    mvPhase = MV_RUN;
+    mvStartMs = millis();
+    mvEndMs = mvStartMs + MOTION_RUN_MAX_MS;
+}
+
+// Kết thúc chuyển động: ghi lại thời gian chạy thực tế + tăng moveSeq
+void motionFinish() {
+    if (mvStartMs > 0) {
+        lastMoveMs = millis() - mvStartMs;
+        lastMoveTarget = mvTarget;
+        moveSeq++;
+        Serial.printf("[MV] finish %s measured=%lums seq=%u\n", lastMoveTarget.c_str(), lastMoveMs,
+                      (unsigned)moveSeq);
+    }
+    mvStartMs = 0;
+    servoStop();
+}
+
+// Về home (CCW home_ms) rồi chạy tới hướng đích
+void motionGoTarget(const String &target) {
+    int ms = 0, dir = 1;
+    String t = target;
+    t.toUpperCase();
+    if (t == "TL") { ms = motion.tlMs; dir = motion.tlDir; }
+    else if (t == "TR") { ms = motion.trMs; dir = motion.trDir; }
+    else if (t == "BL") { ms = motion.blMs; dir = motion.blDir; }
+    else if (t == "BR") { ms = motion.brMs; dir = motion.brDir; }
+    else if (t == "HOME") { ms = 0; }
+    else return;
+
+    mvTarget = t;
+    mvTargetMs = ms;
+    mvDir = dir;
+
+    if (motion.homeMs > 0) {
+        servoPulse(motion.ccwUs); // về mốc TL
+        moving = true;
+        mvPhase = MV_HOME;
+        mvStartMs = millis();
+        mvEndMs = mvStartMs + motion.homeMs;
+        lastAction = "HOMING";
+    } else if (ms > 0) {
+        motionPulse(dir, ms, t.c_str());
+        lastAction = "MOVE";
+    } else {
+        servoStop();
+        lastAction = "STOP";
+    }
+}
+
+// Chạy LIÊN TỤC tới 1 hướng (dùng để ĐO thời gian): TL/TR/BL/BR hoặc HOME
+void motionRunTarget(const String &target) {
+    String t = target;
+    t.toUpperCase();
+    if (t == "TL") motionRun(motion.tlDir, "TL");
+    else if (t == "TR") motionRun(motion.trDir, "TR");
+    else if (t == "BL") motionRun(motion.blDir, "BL");
+    else if (t == "BR") motionRun(motion.brDir, "BR");
+    else if (t == "HOME") motionRun(-1, "HOME");
+    else return;
+    lastAction = "MEASURE";
+}
+
+void motionStopNow() {
+    if (moving || mvStartMs > 0) motionFinish(); // ghi last_ms + move_seq
+    mvPhase = MV_IDLE;
+    lastAction = "STOP";
+}
+
+// Máy trạng thái chuyển động - gọi mỗi loop, KHÔNG blocking
+void motionTick() {
+    if (mvPhase == MV_IDLE) return;
+    unsigned long now = millis();
+    if (now < mvEndMs) return;
+    switch (mvPhase) {
+        case MV_HOME:
+            servoStop();
+            mvPhase = MV_SETTLE;
+            mvEndMs = now + SERVO_SETTLE_MS;
+            break;
+        case MV_SETTLE:
+            if (mvTargetMs > 0) {
+                motionPulse(mvDir, mvTargetMs, mvTarget.c_str());
+                lastAction = "MOVE";
+            } else {
+                mvPhase = MV_IDLE;
+                lastAction = "STOP";
+            }
+            break;
+        case MV_TARGET:
+            motionFinish();
+            mvPhase = MV_IDLE;
+            lastAction = "STOP";
+            break;
+        case MV_RUN: // hết thời gian an toàn
+            motionFinish();
+            mvPhase = MV_IDLE;
+            lastAction = "STOP";
+            break;
+        default:
+            mvPhase = MV_IDLE;
+            break;
+    }
 }
 
 void actionManual() {
-    servoWriteAngle(manualAngle);
-    lastAction = "MANUAL";
+    if (mvPhase == MV_IDLE) {
+        servoStop(); // giữ xung dừng, không quay
+        if (strcmp(lastAction, "MANUAL") != 0) lastAction = "MANUAL";
+    }
 }
 
 void actionStopAlarm() {
@@ -315,21 +547,29 @@ void actionStopAlarm() {
     lastAction = "SAFE_STOP";
 }
 
-void actionParkEast() {
-    servoWriteAngle(SERVO_EAST_ANGLE);
-    lastAction = "PARK_EAST";
+void actionParkEast() { // ban đêm: về mốc TL rồi ngủ
+    motionGoTarget("TL");
+    lastAction = "PARK_TL";
     parkSleepPending = true;
 }
 
 void actionHold() {
-    lastAction = "HOLD"; // motor remains idle
+    if (mvPhase == MV_IDLE) {
+        servoStop();
+        lastAction = "HOLD";
+    }
 }
 
-void actionRotate() { // flowchart: Rotate motor towards brighter side
-    int step = TRACK_STEP * TRACK_DIR;
-    if (diffVal() < 0) step = -step; // phải sáng hơn -> giảm angle (hướng Đông)
-    servoWriteAngle(currentAngle + step);
-    lastAction = diffVal() > 0 ? "TRACK_L" : "TRACK_R";
+// AUTO: mỗi nhịp chạy TRACK_PULSE_MS rồi nghỉ TRACK_PAUSE_MS
+unsigned long lastTrackMs = 0;
+void actionRotate() {
+    unsigned long now = millis();
+    if (now - lastTrackMs < TRACK_PAUSE_MS) return;
+    lastTrackMs = now;
+    int diff = diffVal();
+    int dir = (diff > 0) ? TRACK_DIR : -TRACK_DIR;
+    motionPulse(dir, TRACK_PULSE_MS, dir > 0 ? "TRACK_CW" : "TRACK_CCW");
+    lastAction = dir > 0 ? "TRACK_CW" : "TRACK_CCW";
 }
 
 // ==============================================================================
@@ -445,6 +685,18 @@ void connectivityCheck() { // flowchart: WiFi & Firebase Connected & Available?
         offlineMode = false;
         return;
     }
+    if (wifiOk && (!firebaseReady || !Firebase.ready())) {
+        // WiFi OK nhưng Firebase rớt (TLS/timeout) -> khởi tạo lại định kỳ
+        static unsigned long lastFbRetryMs = 0;
+        unsigned long now = millis();
+        if (now - lastFbRetryMs >= 10000) {
+            lastFbRetryMs = now;
+            Serial.println("[FB] ket noi lai...");
+            firebaseInit();
+            offlineMode = false;
+            return;
+        }
+    }
     if (offlineMode) {
         unsigned long now = millis();
         if (now - lastWifiRetryMs >= WIFI_RETRY_INTERVAL_MS) {
@@ -458,16 +710,70 @@ void connectivityCheck() { // flowchart: WiFi & Firebase Connected & Available?
 }
 
 void applyConfigDoc(JsonDocument &doc, const char *path) { // Dashboard command
+    // Kiểm tra timestamp để tránh áp dụng command cũ.
+    // Date.now() ~1.7e12 > 32-bit -> ArduinoJson luu dang double, KHONG dung is<unsigned long>().
+    double tsRaw = 0;
+    if (doc["timestamp"].is<double>()) {
+        tsRaw = doc["timestamp"].as<double>();
+    } else if (doc["timestamp"].is<long long>()) {
+        tsRaw = (double)doc["timestamp"].as<long long>();
+    }
+    if (tsRaw > 0) {
+        uint64_t cmdTs = (uint64_t)tsRaw;
+        if (cmdTs <= lastCmdTimestamp) return; // bỏ qua command cũ
+        lastCmdTimestamp = cmdTs;
+    }
+
+    bool hasCommand = false;
     if (doc["mode"].is<const char *>()) {
         String m = doc["mode"].as<String>();
         m.toUpperCase();
         runMode = (m == "MANUAL") ? MODE_MANUAL : MODE_AUTO;
+        hasCommand = true;
     }
+    // Cấu hình chuyển động gửi kèm command (đường /command được phép ghi từ web)
+    MotionCfg before = motion;
+    motionApplyDoc(doc);
+    if (memcmp(&before, &motion, sizeof(MotionCfg)) != 0) {
+        motionSavePrefs();
+        Serial.printf("[MOTION] cfg home=%d tl=%d tr=%d bl=%d br=%d cw=%d ccw=%d stop=%d\n",
+                      motion.homeMs, motion.tlMs, motion.trMs, motion.blMs, motion.brMs, motion.cwUs,
+                      motion.ccwUs, motion.stopUs);
+        hasCommand = true;
+    }
+    // Lệnh chuyển động: {move:"TL"|"TR"|"BL"|"BR"|"HOME"} hoặc {dir:"CW"|"CCW", ms:...}
+    if (doc["move"].is<const char *>()) {
+        motionGoTarget(doc["move"].as<String>());
+        hasCommand = true;
+    }
+    if (doc["dir"].is<const char *>()) {
+        String d = doc["dir"].as<String>();
+        d.toUpperCase();
+        int ms = doc["ms"] | 0;
+        if (ms <= 0) {
+            motionRun(d == "CCW" ? -1 : 1, "MANUAL_RUN");
+        } else {
+            motionPulse(d == "CCW" ? -1 : 1, (unsigned long)constrain(ms, 0, 20000), "MANUAL_MOVE");
+        }
+        hasCommand = true;
+    }
+    // ĐO thời gian: {run:"TL"|"TR"|"BL"|"BR"|"HOME"} -> quay liên tục tới khi {stop:true}
+    if (doc["run"].is<const char *>()) {
+        motionRunTarget(doc["run"].as<String>());
+        hasCommand = true;
+    }
+    if (doc["stop"].is<bool>() && doc["stop"].as<bool>()) {
+        motionStopNow();
+        hasCommand = true;
+    }
+    // Giữ tương thích: angle/manual_angle chỉ ghi nhận, KHÔNG điều khiển servo continuous
     if (doc["manual_angle"].is<int>()) {
-        manualAngle = constrain(doc["manual_angle"].as<int>(), SERVO_EAST_ANGLE, SERVO_WEST_ANGLE);
+        manualAngle = constrain(doc["manual_angle"].as<int>(), 0, 360);
+        hasCommand = true;
     }
-    if (doc["angle"].is<int>()) { // Dashboard gui command {mode, angle}
-        manualAngle = constrain(doc["angle"].as<int>(), SERVO_EAST_ANGLE, SERVO_WEST_ANGLE);
+    if (doc["angle"].is<int>()) {
+        manualAngle = constrain(doc["angle"].as<int>(), 0, 360);
+        hasCommand = true;
     }
 
     String newSsid = doc["wifi_ssid"] | "";
@@ -476,9 +782,15 @@ void applyConfigDoc(JsonDocument &doc, const char *path) { // Dashboard command
     if (newSsid.length() > 0) {
         Serial.printf("[NET] nhan WiFi tu cloud ssid=%s\n", newSsid.c_str());
         wifiApply(newSsid, newPass);
-        String base = String(path);
-        Firebase.RTDB.setString(&fbdo, base + "/wifi_ssid", "");
-        Firebase.RTDB.setString(&fbdo, base + "/wifi_pass", "");
+        hasCommand = true;
+    }
+
+    // Xóa command sau khi đã đọc để tránh áp dụng lặp lại
+    if (hasCommand) {
+        cmdApplied = true;
+        Serial.printf("[CMD] apply mode=%s move=%s ts=%.0f path=%s\n", modeStr(), mvTarget.c_str(),
+                      (double)lastCmdTimestamp, path);
+        Firebase.RTDB.deleteNode(&fbdo, path);
     }
 }
 
@@ -489,18 +801,41 @@ void readCloudConfig(const char *path) {
     applyConfigDoc(doc, path);
 }
 
+// /solar_controller/config/motion : cấu hình thời gian chạy từ web, KHÔNG xóa
+void readMotionConfig() {
+    if (!Firebase.RTDB.getJSON(&fbdo, FB_MOTION_PATH)) return;
+    JsonDocument doc;
+    if (deserializeJson(doc, fbdo.payload()) != DeserializationError::Ok) return;
+    MotionCfg before = motion;
+    motionApplyDoc(doc);
+    if (memcmp(&before, &motion, sizeof(MotionCfg)) != 0) {
+        motionSavePrefs();
+        Serial.printf("[MOTION] cfg home=%d tl=%d tr=%d bl=%d br=%d cw=%d ccw=%d stop=%d\n",
+                      motion.homeMs, motion.tlMs, motion.trMs, motion.blMs, motion.brMs, motion.cwUs,
+                      motion.ccwUs, motion.stopUs);
+    }
+}
+
 void dashboardCommand() { // flowchart: Dashboard command
     if (offlineMode) return;
     unsigned long now = millis();
-    if (now - lastConfigReadMs < CONFIG_READ_INTERVAL_MS) return;
+    // Khi đang chạy (home/đo/target) phải nghe lệnh DỪNG nhanh và tránh GET nặng
+    // -> chỉ poll /command 150ms, không đọc config (tránh chặn loop làm sai thời gian)
+    bool fast = (mvPhase != MV_IDLE);
+    if (now - lastConfigReadMs < (fast ? 150UL : CONFIG_READ_INTERVAL_MS)) return;
     lastConfigReadMs = now;
 
-    readCloudConfig(FB_CONFIG_PATH);
     readCloudConfig(FB_COMMAND_PATH);
+    if (fast) return; // đang chạy: chỉ chờ lệnh stop
+    readCloudConfig(FB_CONFIG_PATH);
+    // Không đọc /config/motion: rules Firebase chặn web path này;
+    // cấu hình chuyển động nay đi kèm /command và được lưu vào NVS.
 }
 
 void sendTelemetry(const char *stage) {
     if (offlineMode) return;
+    // Không ghi Firebase khi đang chạy: HTTPS write chặn loop ~200-300ms -> sai thời gian
+    if (mvPhase != MV_IDLE) return;
     unsigned long now = millis();
     if (now - lastFbWriteMs < FIREBASE_WRITE_MIN_MS) return;
     lastFbWriteMs = now;
@@ -515,7 +850,29 @@ void sendTelemetry(const char *stage) {
     json.set("light_state", dayNightState());
     json.set("mode", modeStr());
     json.set("action", lastAction);
-    json.set("angle", currentAngle);
+    json.set("moving", moving ? 1 : 0);
+    json.set("move_target", mvTarget);
+    json.set("move_dir", mvDir > 0 ? "CW" : "CCW");
+    json.set("move_elapsed_ms", (uint32_t)(moving && mvStartMs > 0 ? (millis() - mvStartMs) : 0));
+    json.set("last_ms", (uint32_t)lastMoveMs);
+    json.set("last_target", lastMoveTarget);
+    json.set("move_seq", moveSeq);
+    json.set("fw", "motion-v2");
+    json.set("angle", manualAngle); // giữ field cũ cho dashboard, không phải góc thật
+    json.set("manual_angle", manualAngle);
+    json.set("home_ms", motion.homeMs);
+    json.set("tl_ms", motion.tlMs);
+    json.set("tr_ms", motion.trMs);
+    json.set("bl_ms", motion.blMs);
+    json.set("br_ms", motion.brMs);
+    json.set("cw_us", motion.cwUs);
+    json.set("ccw_us", motion.ccwUs);
+    json.set("stop_us", motion.stopUs);
+    json.set("tl_dir", motion.tlDir);
+    json.set("tr_dir", motion.trDir);
+    json.set("bl_dir", motion.blDir);
+    json.set("br_dir", motion.brDir);
+    json.set("cmd_ts", (double)lastCmdTimestamp); // ACK: timestamp lenh da ap dung
     json.set("servo_on", servoAttached ? 1 : 0);
     json.set("vbat", (double)((int)(vbat * 100)) / 100.0);
     json.set("voltage", (double)((int)(vbat * 100)) / 100.0); // alias cho dashboard
@@ -550,7 +907,20 @@ void nightSleep() {
     Serial.flush();
     esp_sleep_enable_timer_wakeup((uint64_t)NIGHT_SLEEP_MS * 1000ULL);
     esp_light_sleep_start();
-    WiFi.RSSI(); // touch để modem resume
+    // Khôi phục WiFi sau khi wake từ light sleep
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("[SLEEP] WiFi mat sau sleep, dang ket noi lai...");
+        WiFi.reconnect();
+        unsigned long t0 = millis();
+        while (WiFi.status() != WL_CONNECTED && millis() - t0 < 5000) {
+            delay(100);
+        }
+        if (WiFi.status() == WL_CONNECTED) {
+            Serial.printf("[SLEEP] WiFi OK IP=%s\n", WiFi.localIP().toString().c_str());
+        } else {
+            Serial.println("[SLEEP] WiFi FAIL - tiep tuc offline");
+        }
+    }
 }
 
 // ==============================================================================
@@ -559,8 +929,11 @@ void nightSleep() {
 
 void printState() {
     Serial.println();
-    Serial.printf("MODE=%s ANGLE=%d ACTION=%s STATE=%s\n", modeStr(), currentAngle, lastAction,
-                  dayNightState());
+    Serial.printf("MODE=%s ACTION=%s MOVING=%d TARGET=%s DIR=%s STATE=%s\n", modeStr(), lastAction,
+                  moving ? 1 : 0, mvTarget.c_str(), mvDir > 0 ? "CW" : "CCW", dayNightState());
+    Serial.printf("CFG home=%dms tl=%d tr=%d bl=%d br=%d | us cw=%d ccw=%d stop=%d\n", motion.homeMs,
+                  motion.tlMs, motion.trMs, motion.blMs, motion.brMs, motion.cwUs, motion.ccwUs,
+                  motion.stopUs);
     Serial.printf("LDR TL=%4d TR=%4d BL=%4d BR=%4d | DIFF=%+d TOTAL=%d\n", channels[CH_TL].raw,
                   channels[CH_TR].raw, channels[CH_BL].raw, channels[CH_BR].raw, diffVal(), totalAvg());
     Serial.printf("VBAT=%.2fV SOC=%.0f%% CHARGE=%s FAULT=%d LOWBATT=%d NET=%s\n", vbat, soc, chargeStr(),
@@ -573,8 +946,12 @@ void printHelp() {
     Serial.println(" h              : tro giup");
     Serial.println(" a              : che do AUTO");
     Serial.println(" m              : che do MANUAL");
-    Serial.println(" angle <0..180> : dat goc MANUAL");
-    Serial.println(" + / -          : dieu chinh goc MANUAL 5 do");
+    Serial.println(" tl/tr/bl/br    : ve home roi chay toi huong do");
+    Serial.println(" home           : chi ve moc TL");
+    Serial.println(" cw <ms>        : quay CW trong <ms> (0 = quay liên tục)");
+    Serial.println(" ccw <ms>       : quay CCW trong <ms> (0 = quay liên tục)");
+    Serial.println(" run <TL|TR|BL|BR|HOME> : quay liên tục để đo, dung bang 's'");
+    Serial.println(" s              : dung servo ngay");
     Serial.println(" p              : in trang thai hien tai");
     Serial.println(" wifi|<ssid>|<pass> : doi WiFi, luu NVS");
     Serial.println("-----------------------------------------");
@@ -593,23 +970,32 @@ void processSerialCommand(String line) {
         Serial.println("[MODE] AUTO");
     } else if (lower == "m" || lower == "manual") {
         runMode = MODE_MANUAL;
+        motionStopNow();
         Serial.println("[MODE] MANUAL");
-    } else if (lower == "+") {
-        runMode = MODE_MANUAL;
-        servoWriteAngle(currentAngle + 5);
-        Serial.printf("[ANGLE] %d\n", currentAngle);
-    } else if (lower == "-") {
-        runMode = MODE_MANUAL;
-        servoWriteAngle(currentAngle - 5);
-        Serial.printf("[ANGLE] %d\n", currentAngle);
+    } else if (lower == "s" || lower == "stop") {
+        motionStopNow();
+        Serial.println("[SERVO] STOP");
+    } else if (lower == "tl" || lower == "tr" || lower == "bl" || lower == "br") {
+        motionGoTarget(lower);
+        Serial.printf("[SERVO] GO %s\n", lower.c_str());
+    } else if (lower == "home") {
+        motionGoTarget("HOME");
+        Serial.println("[SERVO] HOME");
+    } else if (lower.startsWith("cw ")) {
+        int ms = constrain(lower.substring(3).toInt(), 0, 20000);
+        if (ms == 0) motionRun(1, "MANUAL_RUN");
+        else motionPulse(1, (unsigned long)ms, "MANUAL_CW");
+        Serial.println("[SERVO] CW");
+    } else if (lower.startsWith("ccw ")) {
+        int ms = constrain(lower.substring(4).toInt(), 0, 20000);
+        if (ms == 0) motionRun(-1, "MANUAL_RUN");
+        else motionPulse(-1, (unsigned long)ms, "MANUAL_CCW");
+        Serial.println("[SERVO] CCW");
+    } else if (lower.startsWith("run ")) {
+        motionRunTarget(lower.substring(4));
+        Serial.printf("[SERVO] RUN %s\n", lower.substring(4).c_str());
     } else if (lower == "p" || lower == "status") {
         printState();
-    } else if (lower.startsWith("angle ")) {
-        int a = lower.substring(6).toInt();
-        runMode = MODE_MANUAL;
-        manualAngle = constrain(a, SERVO_EAST_ANGLE, SERVO_WEST_ANGLE);
-        servoWriteAngle(manualAngle);
-        Serial.printf("[ANGLE] %d\n", currentAngle);
     } else if (lower.startsWith("wifi|")) {
         int p1 = line.indexOf('|');
         int p2 = line.indexOf('|', p1 + 1);
@@ -672,8 +1058,10 @@ void setup() {
     }
 
     servoEnsureAttach();
-    panelServo.write(SERVO_CENTER);
-    currentAngle = SERVO_CENTER;
+    motionLoadPrefs();
+    servoStop(); // giữ xung dừng (1500us), không quay khi boot
+    Serial.printf("[SERVO] attached=%d stop=%dus cw=%dus ccw=%dus home=%dms\n", servoAttached ? 1 : 0,
+                  motion.stopUs, motion.cwUs, motion.ccwUs, motion.homeMs);
 
     wifiLoadPrefs();
 #if ENABLE_FIREBASE
@@ -692,27 +1080,32 @@ void setup() {
 
 void loop() {
     connectivityCheck();            // 1. WiFi & Firebase OK?
-    dashboardCommand();             // 2. Dashboard command (mode, angle)
-    readSensors();                  // 3. Read LDR + battery
-    sendTelemetry("read");          // 4. Send status (realtime telemetry)
+    motionTick();                   // 2. Tiến trình chuyển động (non-blocking)
+    dashboardCommand();             // 3. Dashboard command (mode, move, config)
+    motionTick();
+    readSensors();                  // 4. Read LDR + battery
+    motionTick();
     parkSleepPending = false;
 
-    if (runMode == MODE_MANUAL) {   // 5. Auto mode?
-        actionManual();             //    NO -> manual adjust
+    if (mvPhase != MV_IDLE) {
+        // đang chạy lệnh home/target -> không cho auto ghi đè
+    } else if (runMode == MODE_MANUAL) { // 5. Auto mode?
+        actionManual();             //    NO -> đứng yên
     } else if (sensorFault || lowBattery) { // 6. Fault / low battery?
         actionStopAlarm();          //    YES -> stop motor + safe mode
-        // alarm sounds + alert via telemetry
     } else if (isNight()) {         // 7. Night?
-        actionParkEast();           //    YES -> park East -> sleep
+        actionParkEast();           //    YES -> park TL -> sleep
     } else if (abs(diffVal()) >= DEADBAND_THRESHOLD) { // 8. Deadband?
-        actionRotate();             //    YES -> rotate toward sun
+        actionRotate();             //    YES -> 1 nhịp quay về phía sáng
     } else {
-        actionHold();               //    NO -> hold angle
+        actionHold();               //    NO -> dừng
     }
 
     monitorBattery();               // 9. Monitor battery & charging
-    sendTelemetry("update");        // 10. Update dashboard -> loop
-    alarmUpdate();
+    alarmUpdate();                  // 10. Alarm / buzzer
+    motionTick();
+    sendTelemetry("update");        // 11. Gửi telemetry 1 lần duy nhất (cuối loop)
+    motionTick();
 
     if (parkSleepPending) nightSleep();
 
