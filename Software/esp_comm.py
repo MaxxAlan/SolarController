@@ -279,23 +279,25 @@ class ESPCommunicator:
         with self._lock:
             self.telemetry["last_cloud_rx"] = now
             # Neu Serial khong hoat dong trong 3s qua, Cloud tro thanh nguon chinh
-            if (now - self.telemetry["last_serial_rx"]) > 3.0:
+            serial_active = (now - self.telemetry["last_serial_rx"]) <= 3.0
+            if not serial_active:
                 self.telemetry["connection_source"] = "CLOUD (Firebase RTDB)"
                 self.telemetry["is_connected"] = True
                 self.telemetry["last_updated"] = now
 
-            for key in ["ldr_tl", "ldr_tr", "ldr_bl", "ldr_br", "diff", "total",
-                        "angle", "mode", "action", "voltage", "vbat", "soc",
-                        "charge", "fault", "low_batt", "light_state", "wifi_ssid",
-                        "wifi_ip", "rssi", "uptime_s"]:
-                if key in data and data[key] is not None:
-                    self.telemetry[key] = data[key]
+                # Chi cap nhat data khi Serial KHONG active (tranh overwrite)
+                for key in ["ldr_tl", "ldr_tr", "ldr_bl", "ldr_br", "diff", "total",
+                            "angle", "mode", "action", "voltage", "vbat", "soc",
+                            "charge", "fault", "low_batt", "light_state", "wifi_ssid",
+                            "wifi_ip", "rssi", "uptime_s"]:
+                    if key in data and data[key] is not None:
+                        self.telemetry[key] = data[key]
 
-            # Alias logic
-            if "voltage" in data and "vbat" not in data:
-                self.telemetry["vbat"] = data["voltage"]
-            elif "vbat" in data and "voltage" not in data:
-                self.telemetry["voltage"] = data["vbat"]
+                # Alias logic
+                if "voltage" in data and "vbat" not in data:
+                    self.telemetry["vbat"] = data["voltage"]
+                elif "vbat" in data and "voltage" not in data:
+                    self.telemetry["voltage"] = data["vbat"]
 
     # =========================================================================
     # PUBLIC API
@@ -339,6 +341,7 @@ class ESPCommunicator:
             target_url += f"?auth={auth}"
 
         try:
+            payload["timestamp"] = int(time.time() * 1000)  # ms timestamp
             res = requests.patch(target_url, json=payload, timeout=4.0)
             return res.status_code == 200
         except Exception:
@@ -356,21 +359,41 @@ class ESPCommunicator:
         cloud_ok = self.send_cloud_command({"mode": mode_upper})
         return serial_ok or cloud_ok
 
+    # La bàn 360° (nhìn từ trên): 0/360 = Bắc, 90 = Đông, 180 = Nam, 270 = Tây.
+    # Servo continuous không có feedback góc -> lệnh "angle" được quy về hướng gần nhất.
+    ANGLE_TARGETS = ((0, "BR"), (90, "TL"), (180, "BL"), (270, "TR"))
+
+    def _angle_to_target(self, angle: int) -> str:
+        norm = angle % 360
+        best = min(
+            self.ANGLE_TARGETS,
+            key=lambda p: min(abs(norm - p[0]), 360 - abs(norm - p[0])),
+        )
+        return best[1]
+
     def send_angle(self, angle: int) -> bool:
-        """Dat goc quay cho servo trong che do MANUAL (0 - 180)."""
-        angle = max(0, min(180, angle))
-        serial_ok = self.send_serial_cmd(f"angle {angle}")
-        cloud_ok = self.send_cloud_command({"mode": "MANUAL", "angle": angle})
+        """Chọn hướng gần nhất với góc yêu cầu (servo continuous, không có góc thật)."""
+        angle = max(0, min(360, angle)) % 360
+        target = self._angle_to_target(angle)
+        serial_ok = self.send_serial_cmd(target.lower())
+        cloud_ok = self.send_cloud_command({"mode": "MANUAL", "move": target})
         return serial_ok or cloud_ok
 
-    def sweep_servo(self, delay: float = 0.03, step: int = 5) -> bool:
-        """Quét thử góc servo từ 0° -> 180° -> 90° để kiểm tra động cơ panel."""
+    def pulse_servo(self, direction: str = "CW", ms: int = 200) -> bool:
+        """Quay từng nhịp ngắn theo chiều CW/CCW (dùng cho chỉnh tay +/-)."""
+        direction = direction.upper()
+        if direction not in ("CW", "CCW"):
+            direction = "CW"
+        ms = max(50, min(20000, int(ms)))
+        serial_ok = self.send_serial_cmd(f"{direction.lower()} {ms}")
+        cloud_ok = self.send_cloud_command({"mode": "MANUAL", "dir": direction, "ms": ms})
+        return serial_ok or cloud_ok
+
+    def sweep_servo(self, delay: float = 1.2) -> bool:
+        """Quét thử 4 hướng Đông -> Nam -> Tây -> Bắc -> Đông để kiểm tra động cơ."""
         self.send_mode("MANUAL")
-        for a in range(0, 181, step):
-            self.send_angle(a)
-            time.sleep(delay)
-        for a in range(180, 89, -step):
-            self.send_angle(a)
+        for angle in (90, 180, 270, 0, 90):
+            self.send_angle(angle)
             time.sleep(delay)
         return True
 

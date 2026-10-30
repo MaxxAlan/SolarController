@@ -1,3 +1,2 @@
 @echo off
-cd /d "%~dp0.."
-call SolarController.bat
+call "%~dp0SolarController.bat" %*

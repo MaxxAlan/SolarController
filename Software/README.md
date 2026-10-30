@@ -1,45 +1,54 @@
-# Thư Mục Software - SolarController ☀️💻
+# Software — SolarController
 
-Thư mục chứa toàn bộ phần mềm ứng dụng máy tính và công cụ lập trình nạp code cho hệ thống SolarController. Được thiết kế theo chuẩn di động (portable) để **chỉ cần clone từ Git về bất kỳ máy tính nào là có thể chạy ngay lập tức**.
+Công cụ máy tính: monitor realtime, cấu hình WiFi, điều khiển servo nhanh, và script hỗ trợ Arduino IDE.
 
----
-
-## 📂 Cấu trúc thư mục
+## Cấu trúc
 
 ```text
 Software/
-├── Arduino_IDE/                   # 1. Công cụ & Hướng dẫn cho Arduino IDE (Nạp Firmware)
-│   ├── download_arduino_ide.bat   # Mở trang tải Arduino IDE 2.x chính thức
-│   ├── install_esp32_libraries.bat# Tự động tải 3 thư viện (ESP32Servo, ArduinoJson, Firebase)
-│   ├── open_controller_sketch.bat # 1-click mở file firmware trong Code Base
-│   └── README.md                  # Hướng dẫn chi tiết thiết lập board ESP32-S3
-│
-├── Python/                        # 2. Bộ phần mềm giám sát & giao tiếp Python CLI
-│   ├── main.py                    # Chương trình điều hướng chính (Menu CLI)
-│   ├── monitor.py                 # Menu 1: Realtime Monitor (4 LDR, Pin, Voltage, Hướng Servo)
-│   ├── wifi_setup.py              # Menu 2: Cài đặt WiFi cho ESP32 lưu Flash NVS
-│   ├── esp_comm.py                # Giao tiếp kép: Serial COM (auto) + Firebase RTDB
-│   ├── run_servo.py               # Script runner & API điều khiển Servo
-│   ├── config.json                # Cấu hình cổng COM và Firebase Cloud
-│   ├── requirements.txt           # Thư viện yêu cầu (pyserial, requests, rich)
-│   └── setup_env.bat              # Script tự tạo venv và cài thư viện độc lập
-│
-├── SolarController.bat            # File thực thi chính (.bat) khởi chạy menu 3 lựa chọn
-└── run.bat                        # Lối tắt khởi động nhanh phần mềm
+├── Arduino_IDE/                 # Hỗ trợ nạp firmware
+│   ├── download_arduino_ide.bat
+│   ├── install_esp32_libraries.bat
+│   ├── open_controller_sketch.bat
+│   └── README.md
+├── main.py                      # Menu CLI chính
+├── monitor.py                   # [1] Realtime monitor (rich)
+├── wifi_setup.py                # [2] Cấu hình WiFi cho ESP32
+├── esp_comm.py                  # Serial COM + Firebase RTDB
+├── run_servo.py                 # Điều khiển servo nhanh
+├── config.json                  # URL Firebase, auth, cổng COM
+├── requirements.txt
+├── SolarController.bat          # 1-click: tạo .venv + cài thư viện + chạy
+└── run.bat                      # Alias của SolarController.bat
 ```
 
----
+## Chạy
 
-## 🚀 Cách chạy chương trình
+Nhấp đúp `SolarController.bat` (hoặc `run.bat`). Script sẽ:
 
-Chỉ cần **nhấp đúp chuột** vào:
-👉 [`SolarController.bat`](../SolarController.bat) (ở thư mục gốc hoặc trong thư mục `Software/`)
+1. Tìm Python 3 trên máy.
+2. Tạo `.venv` và cài `requirements.txt` nếu chưa có.
+3. Mở menu:
 
-File `.bat` sẽ tự động:
-1. Nhận diện Python trên máy tính.
-2. Tự động khởi tạo môi trường ảo `.venv` và tự cài đặt các thư viện cần thiết (`pyserial`, `requests`, `rich`).
-3. Tự động dò tìm cổng Serial COM của ESP32 (hoặc chuyển sang kết nối Cloud).
-4. Mở Menu 3 lựa chọn:
-   - `[1]` Hiển thị trạng thái tổng thể (Realtime CLI Monitor)
-   - `[2]` Cài đặt WiFi cho ESP32 (Setting WiFi)
-   - `[3]` Thoát chương trình (Exit)
+- `[1]` Realtime Monitor — 4 LDR, pin, trạng thái servo, phím tắt điều khiển.
+- `[2]` Setting WiFi — gửi SSID/password xuống ESP32 qua Serial hoặc Firebase, lưu NVS.
+- `[3]` Exit.
+
+## Phím tắt trong monitor
+
+| Phím | Chức năng |
+|---|---|
+| `Q` / `Esc` | Thoát |
+| `A` / `M` | AUTO / MANUAL |
+| `+` / `-` | Nhịp quay CW / CCW 200 ms |
+| `0` `9` `6` `8` | Bắc / Đông / Nam / Tây |
+| `T` | Quét test 4 hướng |
+| `P` | In trạng thái từ firmware |
+
+> Servo continuous không có feedback góc: lệnh "góc" được quy về hướng gần nhất, còn hiển thị là hướng đích + thời gian nhịp chạy gần nhất (`last_target`, `last_ms`).
+
+## Ghi chú
+
+- `config.json` chứa URL Firebase và legacy token của project `solarcontroller-1cc93`.
+- Cùng một lệnh được gửi song song qua Serial và Firebase; kênh nào tới trước thì áp dụng trước.
+- Firmware bỏ qua lệnh có `timestamp` cũ hơn lệnh đã áp dụng gần nhất.

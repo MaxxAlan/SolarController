@@ -8,8 +8,8 @@ Script tiện ích đa năng có thể:
 Cách dùng từ dòng lệnh:
   python run_servo.py          -> Khởi chạy chương trình (hoặc gọi file .bat)
   python run_servo.py --bat    -> Bật file SolarController.bat trong cửa sổ mới
-  python run_servo.py --sweep  -> Quét thử nghiệm Servo (0° -> 180° -> 90°)
-  python run_servo.py --angle 90  -> Đặt góc Servo về 90°
+  python run_servo.py --sweep  -> Quét thử nghiệm Servo (Đông -> Nam -> Tây -> Bắc -> Đông)
+  python run_servo.py --angle 90  -> Chọn hướng gần nhất với góc 90° (Đông)
 
 Cách dùng trong code Python:
   import run_servo
@@ -76,7 +76,7 @@ def launch_bat(new_window: bool = True) -> Any:
 
 
 def set_servo_angle(angle: int, comm: Optional[ESPCommunicator] = None) -> bool:
-    """Điều khiển góc xoay Servo (0° - 180°)."""
+    """Điều khiển Servo theo hướng gần nhất với góc yêu cầu (0° - 360°)."""
     close_after = False
     if comm is None:
         comm = ESPCommunicator()
@@ -111,7 +111,7 @@ def set_servo_mode(mode: str, comm: Optional[ESPCommunicator] = None) -> bool:
     return ok
 
 
-def test_servo_sweep(delay: float = 0.03, comm: Optional[ESPCommunicator] = None) -> bool:
+def test_servo_sweep(delay: float = 1.2, comm: Optional[ESPCommunicator] = None) -> bool:
     """Chạy thử nghiệm quét góc xoay Servo kiểm tra phần cứng."""
     close_after = False
     if comm is None:
@@ -120,9 +120,9 @@ def test_servo_sweep(delay: float = 0.03, comm: Optional[ESPCommunicator] = None
         close_after = True
         time.sleep(0.5)
 
-    print("[SERVO] Bắt đầu quét kiểm tra động cơ Servo (0° -> 180° -> 90°)...")
+    print("[SERVO] Bắt đầu quét kiểm tra động cơ Servo (Đông -> Nam -> Tây -> Bắc -> Đông)...")
     ok = comm.sweep_servo(delay=delay)
-    print("[SERVO] Quét hoàn tất, động cơ đã trở về vị trí trung tâm 90°.")
+    print("[SERVO] Quét hoàn tất, động cơ đã trở về hướng Đông (90°).")
 
     if close_after:
         time.sleep(0.5)
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     parser.add_argument("--monitor", action="store_true", help="Chạy giao diện hiển thị trạng thái tổng thể (Menu 1)")
     parser.add_argument("--wifi", action="store_true", help="Chạy trình cài đặt WiFi (Menu 2)")
     parser.add_argument("--sweep", action="store_true", help="Kiểm tra quét thử nghiệm động cơ Servo")
-    parser.add_argument("--angle", type=int, help="Đặt góc quay Servo (0 - 180)")
+    parser.add_argument("--angle", type=int, help="Chọn hướng gần nhất với góc 0-360 (0=Bắc, 90=Đông)")
     parser.add_argument("--auto", action="store_true", help="Bật chế độ Servo tự động bám sáng")
     parser.add_argument("--manual", action="store_true", help="Bật chế độ Servo điều khiển thủ công")
 

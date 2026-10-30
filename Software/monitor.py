@@ -4,8 +4,8 @@ Hiển thị giao diện CLI thời gian thực cho:
   1. 4 module quang trở LDR (TL, TR, BL, BR, độ chênh lệch Diff, độ sáng Total)
   2. Điện áp tiêu thụ & trạng thái nguồn (Voltage, Vbat, sạc/xả)
   3. Lượng pin còn lại (Battery SOC %, thanh pin trực quan)
-  4. Hướng của Solar Panel (Góc Servo 0-180°, hướng Đông/Tây, hành động bám sáng)
-Hỗ trợ phím tắt điều khiển trực tiếp: [Q] Thoát, [A] Auto, [M] Manual, [+/-] Chỉnh góc.
+  4. Hướng của Solar Panel (servo continuous: TL/TR/BL/BR, hành động bám sáng)
+Hỗ trợ phím tắt điều khiển trực tiếp: [Q] Thoát, [A] Auto, [M] Manual, [+/-] Nhịp quay.
 """
 
 import sys
@@ -73,38 +73,46 @@ def create_balance_bar(diff: int, max_range: int = 2000, width: int = 24) -> str
 
 
 def create_angle_bar(angle: int, width: int = 30) -> str:
-    """Tạo thanh hiển thị hướng và góc xoay của Solar Panel (0° Đông - 180° Tây)."""
-    clamped = max(0, min(180, angle))
-    pos = int(round((clamped / 180.0) * width))
+    """Tạo thanh hiển thị hướng và góc xoay của Solar Panel (0° Bắc - 360° quay tròn)."""
+    clamped = max(0, min(360, angle))
+    pos = int(round((clamped / 360.0) * width))
     pos = max(0, min(width, pos))
 
     chars = []
     for i in range(width + 1):
         if i == pos:
             chars.append("[bold gold1]☀️[/]")
-        elif i == width // 2:
+        elif i == width // 4:   # 90° Đông
+            chars.append("[dim cyan]│[/]")
+        elif i == width // 2:   # 180° Nam
             chars.append("[dim cyan]┼[/]")
+        elif i == 3 * width // 4:  # 270° Tây
+            chars.append("[dim cyan]│[/]")
         else:
             chars.append("[dim]─[/]")
     return "".join(chars)
 
 
 def get_orientation_description(angle: int) -> str:
-    """Quy đổi góc xoay Servo sang hướng địa lý thực tế."""
-    if angle <= 15:
-        return "Đông Chính (Mặt trời mọc / Đỗ đêm)"
-    elif angle < 45:
-        return "Đông - Đông Nam (Buổi sáng)"
-    elif angle <= 75:
-        return "Đông Nam - Đỉnh đầu (Gần trưa)"
-    elif 75 < angle < 105:
-        return "Trực Diện Đỉnh Đầu (12h trưa - Zenith 90°)"
-    elif angle < 135:
-        return "Tây Nam - Đỉnh đầu (Đầu giờ chiều)"
-    elif angle < 165:
-        return "Tây - Tây Nam (Buổi chiều tà)"
+    """Quy đổi góc xoay Servo sang hướng địa lý thực tế (la bàn 360°)."""
+    # Chuẩn hóa về 0-360
+    a = angle % 360
+    if a <= 15 or a >= 345:
+        return "Bắc (North)"
+    elif a < 75:
+        return "Đông Bắc (Buổi sáng sớm)"
+    elif a <= 105:
+        return "Đông — Mặt trời mọc / Park đêm (90°)"
+    elif a < 165:
+        return "Đông Nam (Buổi sáng muộn)"
+    elif a <= 195:
+        return "Nam — Trưa Zenith (180°)"
+    elif a < 255:
+        return "Tây Nam (Đầu chiều)"
+    elif a <= 285:
+        return "Tây — Mặt trời lặn (270°)"
     else:
-        return "Tây Chính (Mặt trời lặn)"
+        return "Tây Bắc (Chiều tà)"
 
 
 def build_dashboard_renderable(telemetry: dict, message: str = "") -> Layout:
@@ -213,18 +221,26 @@ def build_dashboard_renderable(telemetry: dict, message: str = "") -> Layout:
     # =========================================================================
     # 4. HƯỚNG CỦA SOLAR PANEL (ORIENTATION & SERVO)
     # =========================================================================
-    angle = telemetry.get("angle", 90)
+    # Servo continuous: không có góc thật -> hiển thị hướng đích + nhịp chạy gần nhất
+    TARGET_ANGLE = {"TL": 90, "BL": 180, "TR": 270, "BR": 0}
+    move_target = telemetry.get("move_target", "-")
+    moving = telemetry.get("moving", 0)
+    angle = TARGET_ANGLE.get(move_target, 90)
     mode = telemetry.get("mode", "AUTO")
     action = telemetry.get("action", "HOLD")
     
     orient_desc = get_orientation_description(angle)
     angle_bar = create_angle_bar(angle, width=28)
+    last_target = telemetry.get("last_target", "-")
+    last_ms = telemetry.get("last_ms", 0)
 
     # Định dạng hành động
     action_map = {
         "HOLD": "[bold green]HOLD (Cố Định - Bám Đúng Góc)[/]",
-        "TRACK_L": "[bold yellow]TRACK_L (Quay Sang Trái / Đông)[/]",
-        "TRACK_R": "[bold yellow]TRACK_R (Quay Sang Phải / Tây)[/]",
+        "TRACK_CW": "[bold yellow]TRACK_CW (Quay Thuận Chiều Kim)[/]",
+        "TRACK_CCW": "[bold yellow]TRACK_CCW (Quay Ngược Chiều Kim)[/]",
+        "TRACK_L": "[bold yellow]TRACK_L (Quay Sang Trái)[/]",
+        "TRACK_R": "[bold yellow]TRACK_R (Quay Sang Phải)[/]",
         "PARK_EAST": "[bold magenta]PARK_EAST (Đỗ Hướng Đông Đón Bình Minh)[/]",
         "SAFE_STOP": "[bold red]SAFE_STOP (Dừng Khẩn Cấp)[/]",
         "MANUAL": "[bold cyan]MANUAL (Người Dùng Điều Khiển)[/]",
@@ -236,8 +252,9 @@ def build_dashboard_renderable(telemetry: dict, message: str = "") -> Layout:
     panel_table = Table.grid(expand=True, padding=(0, 1))
     panel_table.add_column(ratio=1)
 
-    panel_table.add_row(f"Góc Xoay Servo : [bold gold1]{angle}°[/]  [dim]({orient_desc})[/]")
-    panel_table.add_row(f"  [dim]Đông 0°[/] {angle_bar} [dim]180° Tây[/]")
+    panel_table.add_row(f"Hướng Servo   : [bold gold1]{'▶ ' if moving else '■ '}{move_target}[/]  [dim]({orient_desc})[/]")
+    panel_table.add_row(f"  [dim]Bắc 0°[/] {angle_bar} [dim]360°[/]")
+    panel_table.add_row(f"[dim]Nhịp gần nhất: {last_target} = {last_ms} ms (continuous servo, không có góc thật)[/]")
     panel_table.add_row("")
     panel_table.add_row(f"Chế Độ Vận Hành: {mode_display}")
     panel_table.add_row(f"Hành Động Servo: {action_display}")
@@ -300,8 +317,8 @@ def build_dashboard_renderable(telemetry: dict, message: str = "") -> Layout:
         "[bold cyan][Q][/] Menu  |  "
         "[bold cyan][A][/] Auto  |  "
         "[bold cyan][M][/] Manual  |  "
-        "[bold cyan][+][/]/[bold cyan][-][/] ±5°  |  "
-        "[bold cyan][0][/][bold cyan][9][/][bold cyan][8][/] Đông/Đỉnh/Tây  |  "
+        "[bold cyan][+][/]/[bold cyan][-][/] CW/CCW  |  "
+        "[bold cyan][0][/][bold cyan][9][/][bold cyan][6][/][bold cyan][8][/] Bắc/Đông/Nam/Tây  |  "
         "[bold cyan][T][/] Test Servo  |  "
         "[bold cyan][P][/] Refresh"
     )
@@ -355,33 +372,31 @@ def run_monitor(comm: Optional[ESPCommunicator] = None):
                         status_message = "Servo: Chế độ MANUAL (Điều khiển thủ công)"
                         status_msg_time = time.time()
                     elif key in (b'+', b'='):
-                        data = comm.get_telemetry()
-                        cur = data.get("angle", 90)
-                        target = min(180, cur + 5)
-                        comm.send_angle(target)
-                        status_message = f"Servo Manual: {target}° (+5°)"
+                        comm.pulse_servo("CW", 200)
+                        status_message = "Servo Manual: quay CW 200 ms"
                         status_msg_time = time.time()
                     elif key in (b'-', b'_'):
-                        data = comm.get_telemetry()
-                        cur = data.get("angle", 90)
-                        target = max(0, cur - 5)
-                        comm.send_angle(target)
-                        status_message = f"Servo Manual: {target}° (-5°)"
+                        comm.pulse_servo("CCW", 200)
+                        status_message = "Servo Manual: quay CCW 200 ms"
                         status_msg_time = time.time()
                     elif key == b'0':
                         comm.send_angle(0)
-                        status_message = "Servo: Hướng Đông (0°)"
+                        status_message = "Servo: Hướng Bắc (0°)"
                         status_msg_time = time.time()
                     elif key == b'9':
                         comm.send_angle(90)
-                        status_message = "Servo: Trực diện đỉnh đầu Zenith (90°)"
+                        status_message = "Servo: Hướng Đông / Park (90°)"
+                        status_msg_time = time.time()
+                    elif key == b'6':
+                        comm.send_angle(180)
+                        status_message = "Servo: Hướng Nam (180°)"
                         status_msg_time = time.time()
                     elif key == b'8':
-                        comm.send_angle(180)
-                        status_message = "Servo: Hướng Tây (180°)"
+                        comm.send_angle(270)
+                        status_message = "Servo: Hướng Tây (270°)"
                         status_msg_time = time.time()
                     elif key in (b't', b'T'):
-                        status_message = "Đang quét kiểm tra Servo (0° -> 180° -> 90°)..."
+                        status_message = "Đang quét kiểm tra Servo (Đông → Nam → Tây → Bắc → Đông)..."
                         status_msg_time = time.time()
                         import threading
                         threading.Thread(target=comm.sweep_servo, daemon=True).start()

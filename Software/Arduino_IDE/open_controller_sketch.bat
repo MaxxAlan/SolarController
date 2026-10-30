@@ -3,7 +3,7 @@ title SolarController - Mo Firmware trong Arduino IDE
 chcp 65001 > nul
 cd /d "%~dp0"
 
-set "SKETCH_PATH=%~dp0..\..\Code Base\controller\controller.ino"
+set "SKETCH_PATH=%~dp0..\..\Code Base\arduino-controller\controller\controller.ino"
 
 echo ========================================================================
 echo   Dang mo file firmware ESP32: controller.ino
