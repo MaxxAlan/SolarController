@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solar Tracker – Hồ sơ dự án</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--fg:#1c1c1a;--mut:#666;--line:#d8d8d2;--acc:#0f766e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--card:#212120;--fg:#ececea;--mut:#a0a09a;--line:#3a3a37;--acc:#5eead4}}
+:root[data-theme="dark"]{--bg:#161615;--card:#212120;--fg:#ececea;--mut:#a0a09a;--line:#3a3a37;--acc:#5eead4}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:36px 0 10px;padding-top:6px;border-top:1px solid var(--line)}
+.mut{color:var(--mut);margin:0 0 12px}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+nav a{padding:5px 12px;border:1px solid var(--line);border-radius:99px;color:var(--fg);text-decoration:none;font-size:13px;background:var(--card)}
+.dg,.pc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;overflow-x:auto}
+.pc .h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;margin-bottom:8px}
+button{font:inherit;font-size:13px;padding:5px 12px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--acc);cursor:pointer;white-space:nowrap}
+pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;max-height:340px;overflow:auto}
+pre.mermaid{white-space:pre;max-height:none;text-align:center}
+#ring{width:100%;max-width:440px;height:auto;display:block;margin:auto}
+.nd{fill:var(--card);stroke:var(--acc);stroke-width:1.5}.t1{font:700 12px sans-serif;fill:var(--fg)}.t2{font:10px sans-serif;fill:var(--mut)}.rg{fill:none;stroke:var(--line);stroke-dasharray:5 5}.ar{fill:var(--acc)}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 14px}#bar{height:100%;width:0;background:var(--acc);transition:width .2s}
+.g{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0}.g b{display:block;margin-bottom:4px}
+.g label{display:flex;gap:10px;align-items:flex-start;padding:4px 0;cursor:pointer}.g input{margin-top:5px;accent-color:var(--acc)}
+.note{border-left:3px solid var(--acc);padding:4px 12px;margin:10px 0;color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+<h1>☀️ Remote Solar Panel Management</h1>
+<p class="mut">Uno điều khiển và tracking, ESP32-S3 làm cổng WiFi và cloud. LCD 2004 và web cùng hiển thị trạng thái, V, I, P, mức pin.</p>
+<nav><a href="#khoi">Sơ đồ khối</a><a href="#vong">Vòng lặp</a><a href="#luu">Lưu đồ</a><a href="#cirkit">Prompt Cirkit</a><a href="#code">Prompt mã nguồn</a><a href="#check">Checklist</a></nav>
+
+<h2 id="khoi">1. Sơ đồ khối</h2>
+<div class="dg"><pre class="mermaid">
+flowchart LR
+  SP["Solar panel 5-6V"] --> INA["INA219 đo V và I"]
+  INA --> RLY["Relay NC ngắt khẩn cấp"]
+  RLY --> TP["TP4056 sạc"]
+  TP --> BAT["Pin 18650 3.7V"]
+  BAT --> MT["MT3608 boost 5V"]
+  MT -. 5V .-> UNO["Arduino Uno"]
+  MT -. 5V .-> ESP["ESP32-S3"]
+  MT -. 5V .-> SRV["2 servo SG90"]
+  MT -. 5V .-> LCD["LCD 2004 I2C"]
+  INA -- I2C --> UNO
+  LDR["4 LDR A0-A3"] --> UNO
+  BTN["Nút E-stop D2, Auto/Manual D3"] --> UNO
+  UNO -- D7 --> RLY
+  UNO -- D9 D10 --> SRV
+  UNO -- I2C --> LCD
+  UNO <-- UART + chia áp 1k/2k --> ESP
+  BAT -- chia 100k/100k --> ESP
+  ESP -- WiFi --> FB[("Firebase")]
+  FB <--> WEB["Web trên điện thoại"]
+</pre></div>
+
+<h2 id="vong">2. Sơ đồ vòng tròn: chu kỳ hoạt động</h2>
+<div class="dg"><svg id="ring" viewBox="0 0 420 420" role="img" aria-label="Chu kỳ hoạt động của hệ thống"></svg></div>
+
+<h2 id="luu">3. Lưu đồ thuật toán (Uno)</h2>
+<div class="dg"><pre class="mermaid">
+flowchart TD
+  S(["Bật nguồn"]) --> I["Khởi tạo LCD, INA219, servo, UART"]
+  I --> E{"Nút E-stop hoặc lệnh ESTOP?"}
+  E -- Có --> ES["ESTOP: relay cắt panel, servo dừng, LCD báo EMERGENCY"]
+  ES --> R{"Nhấn lại hoặc lệnh reset?"}
+  R -- Chưa --> ES
+  R -- Rồi --> E
+  E -- Không --> M{"Chế độ MANUAL?"}
+  M -- Có --> MA["Servo theo lệnh từ web"] --> D
+  M -- Không --> L{"LDR đủ sáng?"}
+  L -- Tối quá 30 s --> W["WAITING FOR SUNRISE: servo về HOME, ngắt xung, kiểm tra mỗi 10 s"] --> D
+  L -- Đủ sáng --> T1["Giai đoạn 1: LDR dò thô"]
+  T1 --> OK{"Sai lệch LDR nhỏ trong 5 s?"}
+  OK -- Chưa --> D
+  OK -- Rồi --> PO["Giai đoạn 2: Perturb and Observe mỗi 2 s, đổi hướng nếu P giảm"]
+  PO --> D
+  D["Mỗi 1 s: đo INA219, tính P và Wh, cập nhật LCD, gửi UART cho ESP32"] --> E
+</pre></div>
+
+<h2 id="cirkit">4. Prompt cho Cirkit Designer (đi dây)</h2>
+<p class="mut">Gửi trước, đợi AI nối dây xong rồi mới sang các prompt mã nguồn.</p>
+<div id="p-cirkit"></div>
+
+<h2 id="code">5. Prompt sinh mã nguồn</h2>
+<p class="mut">Prompt 2 và 3 gửi tiếp trong cùng cuộc trò chuyện Cirkit. Prompt 4 dùng ở Claude hoặc công cụ khác.</p>
+<div id="p-code"></div>
+<div class="note">Trang web ở prompt 4 phải chạy trên Firebase Hosting, GitHub Pages hoặc mở file trực tiếp trên máy. Trang do Claude đăng bị chặn kết nối ra ngoài nên không đọc được Firebase.</div>
+
+<h2 id="check">6. Checklist dự án</h2>
+<p class="mut">Tiến độ: <b id="pg">0/0</b> (tự lưu trên trình duyệt này)</p>
+<div class="bar"><div id="bar"></div></div>
+<div id="cl"></div>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const P=[
+['Prompt 1: linh kiện và đi dây (Cirkit)',`Answer: the load is the whole system. Power chain: solar panel 5-6 V -> INA219 (high side, panel + line) -> relay (COM -> NC) -> TP4056 -> 3.7 V 18650 -> MT3608 boost set to 5.0 V -> 5 V rail. The rail powers Uno (5V pin), ESP32-S3 (5V pin), 2004 I2C LCD, relay coil, INA219, 2 servos and the LDR dividers. Common GND. The relay switches only the panel + line. Wiring only, no firmware yet.
+1. Replace ACS712 with INA219 (I2C 0x40). Add TP4056, 18650, MT3608, a 2nd SG90, a 1000 uF capacitor on the 5 V rail near the servos, a 2nd push button, 4 LDR, four 10k and two 100k resistors. Delete one of the four 200 ohm resistors.
+2. Panel chain: panel + -> INA219 VIN+; INA219 VIN- -> relay COM; relay NC -> TP4056 IN+; panel - -> TP4056 IN-; TP4056 B+/B- -> battery; TP4056 OUT+ -> MT3608 VIN+. An energized relay opens COM-NC and cuts the panel. Relay IN -> D7.
+3. INA219 and the LCD share Uno A4 (SDA) and A5 (SCL).
+4. Servo pan D9, tilt D10, powered from the 5 V rail.
+5. Buttons to GND (INPUT_PULLUP): E-stop D2, AUTO/MANUAL D3.
+6. LDR: 5 V -> LDR -> node -> 10k -> GND. TL A0, TR A1, BL A2, BR A3.
+7. UART: ESP32 GPIO17 (TX) -> Uno D4 (RX). Uno D5 (TX) -> one 200 ohm -> node -> ESP32 GPIO18 (RX); node -> two 200 ohm in series -> GND (about 3.3 V divider).
+8. Battery sense: battery + -> 100k -> node -> 100k -> GND; node -> ESP32 GPIO1 (reading x2).
+If a pin name differs on the Cirkit board, use an equivalent free GPIO and tell me which. Finish with a connection table and flag every part that has no simulation model.`],
+['Prompt 2: firmware Uno',`Write the Uno firmware (Adafruit_INA219, LiquidCrystal_I2C 20x4 at 0x27, Servo, SoftwareSerial 9600). Pins: D2 E-stop, D3 mode button, D4 RX, D5 TX, D7 relay, D9 pan, D10 tilt, A0-A3 LDR TL TR BL BR. Put all thresholds in #defines.
+States: TRACKING, WAITING, MANUAL, ESTOP.
+Every 1 s: read INA219 (average 10 samples), V, I in mA, P = V x I, Wh += P / 3600.
+WAITING: LDR average below DARK_THRESHOLD for 30 s -> servos to HOME_PAN / HOME_TILT (panel faces east), then detach the servos. Check light every 10 s; above LIGHT_THRESHOLD (hysteresis) for 10 s -> TRACKING.
+TRACKING stage 1 (coarse): compare top (TL+TR) vs bottom (BL+BR) and left (TL+BL) vs right (TR+BR); if the error exceeds LDR_TOLERANCE, move that servo 1 deg toward the brighter side every 50 ms.
+Stage 2 (fine): after both errors stay inside the tolerance for 5 s, every 2 s perturb one axis by 2 deg (alternate pan and tilt); keep the direction if P rose by more than 1 percent, otherwise reverse. Limit to +/- 10 deg around the LDR-aligned angle. If an LDR error exceeds the tolerance again, return to stage 1.
+MANUAL: the D3 button or an ESP32 command toggles the mode; angles come only from ESP32 commands.
+ESTOP (top priority in every state): D2 or an ESP32 command sets D7 to cut the panel, servos stop, LCD shows EMERGENCY STOP; pressing again or a command resumes the previous mode.
+LCD 20x4 every 1 s: L1 state (SUN TRACKING / WAITING FOR SUNRISE / MANUAL MODE / EMERGENCY STOP); L2 V and I; L3 P and Wh; L4 battery percent (3.0 V = 0, 4.2 V = 100), CHG or IDLE (I below 5 mA), Net OK or OFF.
+UART: Uno -> ESP32 every 1 s: T,state,V,I_mA,P_W,Wh,pan,tilt,relay. ESP32 -> Uno: B,battV (every 5 s); N,0|1; C,MODE,AUTO|MANUAL; C,PAN,deg; C,TILT,deg; C,ESTOP,1|0.
+SIM_MODE 1: if the INA219 or LDRs cannot be simulated, generate data from a simulated sun (sunAz, sunEl) with a day/night cycle of about 5 minutes: P = 1 W x max(0,cos(panErr)) x max(0,cos(tiltErr)) x daylight, V 5-6 V, I = P / V; LDR values from the same errors, near 0 at night.`],
+['Prompt 3: firmware ESP32-S3 + Firebase',`Write the ESP32-S3 firmware (Arduino framework, WiFi, HTTPClient, WiFiClientSecure, no cloud library). UART1: RX GPIO18, TX GPIO17, 9600 baud, same line protocol as the Uno. Every 5 s read the battery on GPIO1 (ADC1, average 16 samples, multiply by 2) and send B,V to the Uno. Parse the T lines into the latest telemetry.
+Cloud = Firebase Realtime Database over REST (placeholders WIFI_SSID, WIFI_PASS, FIREBASE_URL, FIREBASE_AUTH):
+- PUT /telemetry.json every 2 s: {state,v,i_ma,p_w,wh,bat_v,bat_pct,pan,tilt,relay,ts}
+- POST /history.json every 10 s: {ts,p_w,v,i_ma}
+- GET /commands.json every 2 s: {mode,pan,tilt,estop}; forward every change to the Uno as C lines.
+Send N,1 after a successful request and N,0 after a failure. Reconnect WiFi automatically. Use NTP for ts.
+#define CLOUD_ENABLED 0 for the simulator: skip WiFi, only print the requests to Serial, still run UART and the battery part. #define SIM_BATTERY generates a slowly changing battery voltage when the ADC is not simulated.`],
+['Prompt 4: trang web dashboard',`Write one single-file HTML page (no framework) as a dashboard for the Firebase Realtime Database REST API (const FIREBASE_URL placeholder). Poll /telemetry.json every 2 s and /history.json every 10 s (last 60 points).
+Show: state badge (SUN TRACKING / WAITING FOR SUNRISE / MANUAL / EMERGENCY), V, I, P, energy in Wh, battery percent bar, pan and tilt angles, last update time, and an offline warning if ts is older than 15 s. Draw a line chart of power over time with a plain canvas.
+Controls, written with PATCH to /commands.json: AUTO/MANUAL switch, pan and tilt sliders 0-180 (enabled only in MANUAL), a large red EMERGENCY STOP button with a confirm dialog, and a RESET button.
+Mobile first, dark mode, Vietnamese labels.`]
+];
+function card(box,[t,x]){const d=document.createElement('div');d.className='pc';d.innerHTML='<div class="h"><span></span><button>Sao chép</button></div><pre></pre>';
+d.querySelector('span').textContent=t;const pre=d.querySelector('pre'),b=d.querySelector('button');pre.textContent=x;
+b.onclick=async()=>{try{await navigator.clipboard.writeText(x);b.textContent='Đã chép ✓'}catch(e){const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Đã chọn, nhấn copy'}setTimeout(()=>b.textContent='Sao chép',2000)};
+box.appendChild(d)}
+card($('#p-cirkit'),P[0]);P.slice(1).forEach(p=>card($('#p-code'),p));
+
+const N=['Cảm nhận|4 LDR','Quyết định|Auto / Manual / E-stop','Xoay servo|pan + tilt','Đo công suất|INA219: V, I, P','Hiển thị|LCD 2004','Đẩy lên cloud|ESP32 → Firebase','Nhận lệnh|từ web về Uno'];
+(()=>{const c=210,R=140,n=N.length;let h='<circle class="rg" cx="210" cy="210" r="140"/><text class="t1" x="210" y="206" text-anchor="middle" style="font-size:15px">Vòng lặp 1 giây</text><text class="t2" x="210" y="224" text-anchor="middle">Uno + ESP32-S3</text>';
+N.forEach((t,i)=>{const a=-Math.PI/2+i*2*Math.PI/n,x=c+R*Math.cos(a),y=c+R*Math.sin(a),m=a+Math.PI/n,[p,q]=t.split('|');
+h+=`<g transform="translate(${x} ${y})"><rect class="nd" x="-60" y="-22" width="120" height="44" rx="10"/><text class="t1" y="-3" text-anchor="middle">${i+1}. ${p}</text><text class="t2" y="13" text-anchor="middle">${q}</text></g><path class="ar" d="M-6 -5L6 0L-6 5Z" transform="translate(${c+R*Math.cos(m)} ${c+R*Math.sin(m)}) rotate(${m*180/Math.PI+90})"/>`});
+$('#ring').innerHTML=h})();
+
+const CL=[
+['Mua sắm (đã có: TP4056, MT3608, pin, ESP32, Uno, 1 servo, panel, 4 LDR)',['Module INA219 (MCU-219)','Module relay 1 kênh 5V có opto','LCD 2004 có sẵn module I2C','Servo SG90 thứ 2 và giá đỡ pan-tilt','2 nút nhấn','Điện trở: 4 con 10kΩ, 2 con 100kΩ, 1 con 1kΩ, 1 con 2kΩ','Tụ 1000µF, breadboard, dây Dupont, đế pin 18650, công tắc gạt','Đồng hồ vạn năng, mỏ hàn, thiếc, dây điện']],
+['Xác nhận thông số',['Loại ESP32: S3 hay WROOM-32 (WROOM thì đổi GPIO1 sang GPIO34)','TP4056 có chip bảo vệ DW01 hay không','Tấm pin: điện áp hở mạch không quá 8V, đủ nhẹ cho SG90','Địa chỉ I2C của LCD (0x27 hoặc 0x3F) bằng I2C scanner']],
+['Mô phỏng trên Cirkit',['Gửi prompt 1, kiểm tra bảng kết nối AI trả về','Gửi prompt 2, chạy SIM_MODE','Gửi prompt 3 với CLOUD_ENABLED 0','Kiểm tra: LCD, tracking, WAITING FOR SUNRISE, E-stop']],
+['Cloud và web',['Tạo dự án Firebase, bật Realtime Database, lấy FIREBASE_URL','Điền WIFI_SSID, WIFI_PASS, FIREBASE_URL, FIREBASE_AUTH, đặt CLOUD_ENABLED 1','Sinh trang web bằng prompt 4 và đưa lên Firebase Hosting hoặc GitHub Pages','Mở từ điện thoại, kiểm tra dữ liệu và gửi lệnh hai chiều']],
+['Lắp ráp và test từng khối',['Chỉnh MT3608 đúng 5,0V bằng đồng hồ trước khi cắm tải','Test TP4056 + pin + MT3608 ra rail 5V','Test INA219 (thấy 0x40, đọc được V và I)','Test LCD 2004','Test 2 servo (cấp từ rail 5V, có tụ 1000µF)','Test 4 LDR (đọc A0 đến A3)','Test relay NC cắt dây (+) của panel','Test UART Uno và ESP32 qua cầu chia áp 1k/2k','Test đo pin ở GPIO1 qua cầu chia 100k/100k','Test cloud hai chiều với phần cứng thật']],
+['Nghiệm thu',['Chạy ngoài nắng thật, so sánh công suất có và không tracking','E-stop từ nút và từ web đều cắt được panel','Che LDR để thấy WAITING FOR SUNRISE rồi chiếu sáng để quay lại tracking','Không cắm USB khi rail 5V đang cấp điện','Chụp ảnh, quay video, xuất đồ thị công suất cho báo cáo']]
+];
+let st={};try{st=JSON.parse(localStorage.getItem('sol-cl')||'{}')}catch(e){}
+const root=$('#cl');
+CL.forEach(([t,items],g)=>{const d=document.createElement('div');d.className='g';const b=document.createElement('b');b.textContent=(g+1)+'. '+t;d.appendChild(b);
+items.forEach((x,i)=>{const k=g+'-'+i,l=document.createElement('label'),c=document.createElement('input'),s=document.createElement('span');c.type='checkbox';c.checked=!!st[k];s.textContent=x;
+c.onchange=()=>{st[k]=c.checked;try{localStorage.setItem('sol-cl',JSON.stringify(st))}catch(e){}prog()};l.append(c,s);d.appendChild(l)});root.appendChild(d)});
+function prog(){const a=[...root.querySelectorAll('input')],n=a.filter(i=>i.checked).length;$('#pg').textContent=n+'/'+a.length;$('#bar').style.width=(100*n/a.length)+'%'}
+prog();
+</script>
+
+<!--claude-mermaid-runtime-begin:3477-->
+<style>.mermaid-diagram{margin-block:4px}.mermaid-diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}</style>
+<script src="/_runtime/mermaid-11.16.1.min.js"></script>
+<script>(function(){
+var CFG={"palettes":{"light":{"surface":"#f4efe4","text":"#42392e","line":"#8a7f6d","border":"#7a6c52","bg":"#fffdf8"},"dark":{"surface":"#262b34","text":"#f2f3f5","line":"#a8adb8","border":"#9aa4b8","bg":"#1f232b"}}};
+if(typeof mermaid==='undefined')return;
+var pres=Array.prototype.slice.call(document.querySelectorAll('pre.mermaid')).filter(function(p){if(p.hasAttribute('data-claude-mermaid-claimed'))return false;p.setAttribute('data-claude-mermaid-claimed','1');return true;});
+if(!pres.length)return;
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+var root=document.documentElement;
+var items=pres.map(function(pre){
+var mount=document.createElement('div');mount.className='mermaid-diagram';
+return {pre:pre,mount:mount,src:pre.textContent||''};
+});
+var seq=0;
+var renderGen=0;
+var lastKey='';
+function pageBg(fallback){
+var els=[document.body,document.documentElement];
+for(var i=0;i<els.length;i++){
+var c=els[i]&&getComputedStyle(els[i]).backgroundColor;
+if(c&&c!=='transparent'&&c!=='rgba(0, 0, 0, 0)')return c;
+}
+return fallback;
+}
+function render(){
+var theme=root.getAttribute('data-theme');
+var dark=theme==='dark'||(!!(mq&&mq.matches)&&theme!=='light');
+var pal=dark?CFG.palettes.dark:CFG.palettes.light;
+var bg=pageBg(pal.bg);
+var key=(dark?'d':'l')+'|'+bg;
+if(key===lastKey)return;
+lastKey=key;
+var gen=++renderGen;
+var font=getComputedStyle(document.body).fontFamily||'sans-serif';
+var nat={useMaxWidth:false};
+mermaid.initialize({
+startOnLoad:false,securityLevel:'strict',theme:'base',
+flowchart:nat,sequence:nat,er:nat,state:nat,class:nat,pie:nat,
+gantt:nat,journey:nat,timeline:nat,gitGraph:nat,mindmap:nat,xyChart:nat,
+quadrantChart:nat,sankey:nat,c4:nat,requirement:nat,block:nat,
+packet:nat,kanban:nat,architecture:nat,radar:nat,
+themeVariables:{background:bg,mainBkg:pal.surface,primaryColor:pal.surface,
+primaryTextColor:pal.text,lineColor:pal.line,primaryBorderColor:pal.border,
+nodeBorder:pal.border,clusterBorder:pal.border,edgeLabelBackground:bg,
+clusterBkg:'rgba(127,127,127,0.07)',titleColor:pal.text,
+darkMode:dark,rowOdd:bg,rowEven:'rgba(127,127,127,0.07)',
+attributeBackgroundColorOdd:bg,attributeBackgroundColorEven:'rgba(127,127,127,0.07)',
+fontSize:'16px',fontFamily:font},
+themeCSS:'.node rect, .node circle, .node polygon, .node path, .cluster rect { stroke-width: 2px; }'
+});
+items.forEach(function(it){
+var id='claude-mermaid-'+seq++;
+mermaid.render(id,it.src).then(function(r){
+if(gen!==renderGen)return;
+var prev=it.pre.previousElementSibling;
+if(prev&&prev.className==='mermaid-diagram'&&prev!==it.mount)return;
+it.mount.innerHTML=r.svg;
+if(!it.mount.parentNode)it.pre.parentNode.insertBefore(it.mount,it.pre);
+it.pre.style.display='none';
+},function(){
+var scratch=document.getElementById(id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+scratch=document.getElementById('d'+id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+if(gen!==renderGen)return;
+if(it.mount.parentNode)it.mount.parentNode.removeChild(it.mount);
+it.pre.style.display='';
+});
+});
+}
+render();
+if(mq&&mq.addEventListener)mq.addEventListener('change',render);
+if(typeof MutationObserver!=='undefined')new MutationObserver(render).observe(root,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+<!--claude-mermaid-runtime-end-->
+</body>
+</html>
