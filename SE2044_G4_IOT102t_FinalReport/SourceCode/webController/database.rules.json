@@ -1,0 +1,32 @@
+{
+  "rules": {
+    "users": {
+      ".read": "auth != null",
+      "$uid": { ".write": "auth != null && false" }
+    },
+
+    "device": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+    },
+
+    "cmd": {
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'user')",
+
+      "cfgPanMin":     { ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+      "cfgPanMax":     { ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+      "cfgTiltMin":    { ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+      "cfgTiltMax":    { ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+      "cfgSolarOn":    { ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+      "cfgSolarOff":   { ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+      "cfgBattStop":   { ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+      "cfgBattResume": { ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'" }
+    },
+
+    "history": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'device'"
+    }
+  }
+}

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đăng nhập | Solar Tracker - SE2044 Nhóm 4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --bg-card: rgba(18, 24, 38, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(245, 158, 11, 0.6);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #f59e0b;
+      --primary-hover: #d97706;
+      --primary-glow: rgba(245, 158, 11, 0.25);
+      --cyan: #06b6d4;
+      --red: #ef4444;
+      --green: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glowing orbs */
+    .ambient-glow {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(6, 182, 212, 0.05) 50%, transparent 70%);
+      top: -100px;
+      right: -100px;
+      pointer-events: none;
+      z-index: 0;
+      animation: float 12s ease-in-out infinite alternate;
+    }
+    .ambient-glow-2 {
+      position: fixed;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+      bottom: -100px;
+      left: -100px;
+      pointer-events: none;
+      z-index: 0;
+      animation: float 10s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(40px, 30px) scale(1.1); }
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      transition: border-color 0.3s;
+    }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .brand-icon-wrapper {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(6, 182, 212, 0.2));
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px var(--primary-glow);
+    }
+
+    .brand-icon-wrapper svg {
+      width: 34px;
+      height: 34px;
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 30%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .badge-tag {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: #64748b;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .input-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 13px 14px 13px 42px;
+      background: rgba(11, 15, 23, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+      background: rgba(11, 15, 23, 0.95);
+    }
+
+    input::placeholder {
+      color: #475569;
+    }
+
+    .btn-toggle-pass {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-toggle-pass:hover {
+      color: #cbd5e1;
+    }
+    .btn-toggle-pass svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .error-box {
+      min-height: 22px;
+      margin: 8px 0 14px;
+      font-size: 13px;
+      color: var(--red);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: all 0.2s ease;
+    }
+
+    .error-box.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #0b0f17;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px var(--primary-glow);
+      transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+    }
+
+    .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(11, 15, 23, 0.3);
+      border-top-color: #0b0f17;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Quick login chips */
+    .quick-fill {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .quick-fill-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chips-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      flex: 1;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .chip-btn span.role-title {
+      font-size: 11px;
+      color: var(--primary);
+    }
+
+    .chip-btn:hover {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.3);
+      transform: translateY(-1px);
+    }
+
+    /* Role guide tooltip card */
+    .guide-card {
+      margin-top: 14px;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      font-size: 11.5px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .guide-item {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .guide-item:last-child {
+      margin-bottom: 0;
+    }
+    .guide-badge {
+      font-weight: 700;
+      color: #e2e8f0;
+      min-width: 48px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="ambient-glow"></div>
+<div class="ambient-glow-2"></div>
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="brand-header">
+      <div class="brand-icon-wrapper">
+        <!-- Sun with tracker rays icon -->
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </div>
+      <h1 class="brand-title">SOLAR TRACKER</h1>
+      <p class="brand-subtitle">
+        <span>Hệ thống giám sát & Điều khiển</span>
+        <span class="badge-tag">SE2044 • NHÓM 4</span>
+      </p>
+    </div>
+
+    <form id="loginForm" onsubmit="return false;">
+      <div class="form-group">
+        <label class="form-label" for="email">Tài khoản</label>
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </span>
+          <input id="email" type="text" autocomplete="username" placeholder="Nhập 'user' hoặc 'admin'..." required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="pass">Mật khẩu</label>
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </span>
+          <input id="pass" type="password" autocomplete="current-password" placeholder="Mặc định: 123456" required>
+          <button type="button" class="btn-toggle-pass" id="btnTogglePass" title="Ẩn/hiện mật khẩu">
+            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="err" class="error-box">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="errText"></span>
+      </div>
+
+      <button id="btnLogin" class="btn-submit" type="button">
+        <span class="spinner" id="btnSpinner"></span>
+        <span id="btnText">ĐĂNG NHẬP HỆ THỐNG</span>
+      </button>
+    </form>
+
+    <div class="quick-fill">
+      <div class="quick-fill-label">
+        <span>Đăng nhập nhanh một chạm</span>
+        <span>Pass: 123456</span>
+      </div>
+      <div class="chips-row">
+        <button type="button" class="chip-btn" id="chipUser">
+          <span class="role-title">Tài khoản</span>
+          <span>👤 user</span>
+        </button>
+        <button type="button" class="chip-btn" id="chipAdmin">
+          <span class="role-title">Quản trị</span>
+          <span>⚡ admin</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-item">
+        <span class="guide-badge">User:</span>
+        <span>Theo dõi thời gian thực, chỉnh góc Pan/Tilt, bật/tắt relay sạc, đổi WiFi.</span>
+      </div>
+      <div class="guide-item">
+        <span class="guide-badge">Admin:</span>
+        <span>Đầy đủ quyền + cấu hình giới hạn góc quay & ngưỡng điện áp relay.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  firebase.initializeApp(firebaseConfig);
+  const $ = id => document.getElementById(id);
+
+  // Da dang nhap roi -> chuyen thang toi dashboard
+  firebase.auth().onAuthStateChanged(u => {
+    if (u) location.replace('dashboard.html');
+  });
+
+  // Toggle Password visibility
+  let passShown = false;
+  $('btnTogglePass').addEventListener('click', () => {
+    passShown = !passShown;
+    $('pass').type = passShown ? 'text' : 'password';
+    $('eyeIcon').innerHTML = passShown
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  });
+
+  // Quick fill buttons
+  $('chipUser').addEventListener('click', () => {
+    $('email').value = 'user';
+    $('pass').value = '123456';
+    clearError();
+  });
+  $('chipAdmin').addEventListener('click', () => {
+    $('email').value = 'admin';
+    $('pass').value = '123456';
+    clearError();
+  });
+
+  function showError(msg) {
+    const errBox = $('err');
+    $('errText').textContent = msg;
+    errBox.classList.add('show');
+  }
+
+  function clearError() {
+    $('err').classList.remove('show');
+  }
+
+  // Handle Login
+  async function doLogin() {
+    clearError();
+    let email = $('email').value.trim();
+    const pass = $('pass').value;
+
+    if (!email || !pass) {
+      showError('Vui lòng nhập đầy đủ tài khoản và mật khẩu.');
+      return;
+    }
+
+    if (!email.includes('@')) email += '@nhom4.com';
+
+    const btn = $('btnLogin');
+    const spinner = $('btnSpinner');
+    const btnText = $('btnText');
+
+    btn.disabled = true;
+    spinner.style.display = 'inline-block';
+    btnText.textContent = 'Đang xác thực...';
+
+    try {
+      await firebase.auth().signInWithEmailAndPassword(email, pass);
+      // onAuthStateChanged tu dong redirect
+    } catch (e) {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnText.textContent = 'ĐĂNG NHẬP HỆ THỐNG';
+
+      const mapErrors = {
+        'auth/invalid-credential': 'Email hoặc mật khẩu không chính xác.',
+        'auth/user-not-found': 'Tài khoản không tồn tại trên hệ thống.',
+        'auth/wrong-password': 'Mật khẩu không đúng.',
+        'auth/invalid-email': 'Định dạng tài khoản không hợp lệ.',
+        'auth/too-many-requests': 'Quá nhiều lần thử thất bại. Vui lòng thử lại sau.',
+        'auth/network-request-failed': 'Lỗi kết nối mạng, vui lòng kiểm tra đường truyền.'
+      };
+      showError(mapErrors[e.code] || ('Lỗi xác thực: ' + e.message));
+    }
+  }
+
+  $('btnLogin').addEventListener('click', doLogin);
+  $('pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  $('email').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
