@@ -1,6 +1,6 @@
 /*
  ==========================================================================
-   NHOM 4 - SE2044  |  SOLAR TRACKER 2 TRUC  |  ARDUINO UNO
+   NHOM 1 - SE2044  |  SOLAR TRACKER 2 TRUC  |  ARDUINO UNO
  ==========================================================================
   - 4 LDR   -> tim huong sang nhat -> 2 servo (quay NGANG + quay DOC)
   - INA219  -> dong / ap solar, cong don nang luong (Wh)

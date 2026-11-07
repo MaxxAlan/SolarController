@@ -1,106 +1,205 @@
 <mxfile host="Electron" agent="Grok">
   <diagram id="solar-tracker-system" name="Solar Tracker Block Diagram">
-    <mxGraphModel dx="1324" dy="822" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="560" math="0" shadow="0">
+    <mxGraphModel dx="1120" dy="695" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="560" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="app_field_box" parent="1" style="rounded=1;arcSize=3;dashed=1;dashPattern=8 6;fillColor=none;strokeColor=#000000;strokeWidth=2;whiteSpace=wrap;html=1;" value="" vertex="1">
-          <mxGeometry height="480" width="1010" x="40" y="30" as="geometry" />
+          <mxGeometry height="490" width="1030" x="40" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="app_field_title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=bottom;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;Application Field&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 13px; font-weight: bold;&quot;&gt;Hardware &amp;amp; Software&lt;/font&gt;" vertex="1">
-          <mxGeometry height="45" width="240" x="55" y="455" as="geometry" />
+        <mxCell id="app_field_title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=bottom;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;Application Field&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 13px; font-weight: bold;&quot;&gt;Hardware &amp;amp; Software (Local Unit)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="45" width="280" x="55" y="465" as="geometry" />
         </mxCell>
         <mxCell id="iot_server_box" parent="1" style="rounded=1;arcSize=3;dashed=1;dashPattern=8 6;fillColor=none;strokeColor=#000000;strokeWidth=2;whiteSpace=wrap;html=1;" value="" vertex="1">
-          <mxGeometry height="480" width="260" x="1220" y="30" as="geometry" />
+          <mxGeometry height="490" width="260" x="1250" y="30" as="geometry" />
         </mxCell>
         <mxCell id="iot_server_title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=bottom;whiteSpace=wrap;rounded=0;" value="&lt;b&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;IoT Server&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 13px; font-weight: bold;&quot;&gt;Connectivity &amp;amp; Analytics&lt;/font&gt;" vertex="1">
-          <mxGeometry height="45" width="240" x="1235" y="455" as="geometry" />
+          <mxGeometry height="45" width="240" x="1265" y="465" as="geometry" />
         </mxCell>
         <mxCell id="cloud_internet" parent="1" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=14;fontStyle=0;align=center;verticalAlign=middle;" value="Internet" vertex="1">
-          <mxGeometry height="75" width="120" x="1070" y="185" as="geometry" />
-        </mxCell>
-        <mxCell id="ldr_sensor" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="4x LDR&lt;br&gt;Sensors&lt;br&gt;(A0 - A3)" vertex="1">
-          <mxGeometry height="65" width="115" x="65" y="80" as="geometry" />
-        </mxCell>
-        <mxCell id="solar_panel" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="Solar Panel&lt;br&gt;(5V - 6V)" vertex="1">
-          <mxGeometry height="65" width="115" x="65" y="335" as="geometry" />
-        </mxCell>
-        <mxCell id="uno_mcu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4D4D4;strokeColor=#000000;strokeWidth=1.5;fontSize=15;fontStyle=0;align=center;verticalAlign=middle;" value="Arduino Uno&lt;br&gt;R3" vertex="1">
-          <mxGeometry height="180" width="135" x="230" y="80" as="geometry" />
-        </mxCell>
-        <mxCell id="ina219_sensor" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="INA219&lt;br&gt;Power Sensor&lt;br&gt;(I2C)" vertex="1">
-          <mxGeometry height="65" width="115" x="230" y="335" as="geometry" />
-        </mxCell>
-        <mxCell id="servo_motors" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="2x Servo&lt;br&gt;Motors (SG90)&lt;br&gt;(Pan &amp;amp; Tilt)" vertex="1">
-          <mxGeometry height="65" width="125" x="420" y="70" as="geometry" />
-        </mxCell>
-        <mxCell id="lcd_display" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="LCD 2004&lt;br&gt;Display&lt;br&gt;(I2C)" vertex="1">
-          <mxGeometry height="65" width="125" x="420" y="175" as="geometry" />
-        </mxCell>
-        <mxCell id="relay_module" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="Relay&lt;br&gt;Module&lt;br&gt;(D7)" vertex="1">
-          <mxGeometry height="65" width="125" x="420" y="335" as="geometry" />
-        </mxCell>
-        <mxCell id="tp4056_charger" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="TP4056&lt;br&gt;Charger" vertex="1">
-          <mxGeometry height="65" width="115" x="610" y="335" as="geometry" />
-        </mxCell>
-        <mxCell id="battery_pack" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontStyle=0;" value="Battery 18650&lt;br&gt;&amp;amp; Divider&lt;br&gt;(GPIO4 ADC)" vertex="1">
-          <mxGeometry height="65" width="130" x="780" y="335" as="geometry" />
-        </mxCell>
-        <mxCell id="esp_mcu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4D4D4;strokeColor=#000000;strokeWidth=1.5;fontSize=14;fontStyle=0;align=center;verticalAlign=middle;" value="ESP32-S3&lt;br&gt;Gateway" vertex="1">
-          <mxGeometry height="180" width="150" x="680" y="80" as="geometry" />
-        </mxCell>
-        <mxCell id="wifi_box" parent="1" style="rounded=1;arcSize=25;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=13;fontStyle=0;align=center;verticalAlign=middle;" value="Wi-Fi" vertex="1">
-          <mxGeometry height="42" width="70" x="795" y="195" as="geometry" />
+          <mxGeometry height="75" width="120" x="1080" y="185" as="geometry" />
         </mxCell>
         <mxCell id="firebase_server" parent="1" style="rounded=1;arcSize=18;whiteSpace=wrap;html=1;fillColor=#D4D4D4;strokeColor=#000000;strokeWidth=1.5;fontSize=15;fontStyle=0;verticalAlign=top;spacingTop=20;" value="Firebase&lt;br&gt;Cloud Server" vertex="1">
-          <mxGeometry height="380" width="210" x="1245" y="65" as="geometry" />
+          <mxGeometry height="390" width="210" x="1275" y="65" as="geometry" />
         </mxCell>
         <mxCell id="firebase_web" parent="1" style="rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontStyle=0;align=center;verticalAlign=middle;" value="Firebase Hosting&lt;br&gt;(Web Dashboard)" vertex="1">
-          <mxGeometry height="60" width="160" x="1270" y="150" as="geometry" />
+          <mxGeometry height="60" width="160" x="1300" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="firebase_db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=10;" value="Realtime DB&lt;br&gt;(/device/tele)" vertex="1">
-          <mxGeometry height="65" width="140" x="1280" y="270" as="geometry" />
+        <mxCell id="firebase_db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=10;" value="Realtime DB&lt;br&gt;(/device/tele, /cmd)" vertex="1">
+          <mxGeometry height="65" width="140" x="1310" y="270" as="geometry" />
         </mxCell>
-        <mxCell id="e_panel_ina" edge="1" parent="1" source="solar_panel" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;" target="ina219_sensor">
+        <mxCell id="ldr_sensor" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="4x LDR&lt;br&gt;Sensors&lt;br&gt;(A0 - A3)" vertex="1">
+          <mxGeometry height="65" width="115" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="uno_mcu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4D4D4;strokeColor=#000000;strokeWidth=1.5;fontSize=15;fontStyle=0;align=center;verticalAlign=middle;" value="Arduino Uno&lt;br&gt;&lt;font style=&quot;font-size: 11px;&quot;&gt;(Master Controller)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="175" width="135" x="215" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="servo_motors" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="2x Servo&lt;br&gt;Motors (SG90)&lt;br&gt;(Pan &amp;amp; Tilt)" vertex="1">
+          <mxGeometry height="60" width="125" x="525" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lcd_display" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="LCD 2004&lt;br&gt;Display" vertex="1">
+          <mxGeometry height="60" width="125" x="430" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="esp_mcu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4D4D4;strokeColor=#000000;strokeWidth=1.5;fontSize=14;fontStyle=0;align=center;verticalAlign=middle;" value="ESP32-S3&lt;br&gt;Gateway&lt;br&gt;&lt;font style=&quot;font-size: 11px;&quot;&gt;(Cloud Bridge)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="175" width="150" x="710" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="wifi_box" parent="1" style="rounded=1;arcSize=25;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;align=center;verticalAlign=middle;" value="Wi-Fi&lt;br&gt;2.4 GHz" vertex="1">
+          <mxGeometry height="42" width="70" x="830" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="power_bus_5v" parent="1" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#E8E8E8;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" value="5V DC Supply Power" vertex="1">
+          <mxGeometry height="26" width="320" x="370" y="265" as="geometry" />
+        </mxCell>
+        <mxCell id="solar_panel" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="Solar Panel&lt;br&gt;(5V - 6V, 5W)" vertex="1">
+          <mxGeometry height="65" width="115" x="55" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="ina219_sensor" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="INA219&lt;br&gt;Power Sensor&lt;br&gt;(I2C 0x40)" vertex="1">
+          <mxGeometry height="65" width="115" x="190" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="relay_module" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="Relay Module&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;Charge Switch (D7)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="65" width="120" x="375" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="tp4056_charger" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="TP4056&lt;br&gt;Charger&lt;br&gt;(CC / CV)" vertex="1">
+          <mxGeometry height="65" width="115" x="558" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="battery_pack" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=11;fontStyle=0;" value="Battery 18650&lt;br&gt;&amp;amp; Divider&lt;br&gt;(3.7V Li-ion)" vertex="1">
+          <mxGeometry height="65" width="125" x="735" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="mt3608_boost" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="&lt;b&gt;MT3608 DC-DC&lt;/b&gt;&lt;br&gt;&lt;b&gt;Boost Converter&lt;/b&gt;&lt;br&gt;(Step-Up 3.7V to 5V)&lt;br&gt;&lt;font style=&quot;font-size: 10px; font-weight: bold; color: #333333;&quot;&gt;Supply Power&lt;/font&gt;" vertex="1">
+          <mxGeometry height="75" width="145" x="910" y="355" as="geometry" />
+        </mxCell>
+        <mxCell id="e_panel_ina" edge="1" parent="1" source="solar_panel" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=2;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="ina219_sensor">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_ldr_uno" edge="1" parent="1" source="ldr_sensor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;" target="uno_mcu">
+        <mxCell id="e_ina_relay" edge="1" parent="1" source="ina219_sensor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=2;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="relay_module" value="Solar Power">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_ina_uno" edge="1" parent="1" source="ina219_sensor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;" target="uno_mcu">
+        <mxCell id="e_relay_tp" edge="1" parent="1" source="relay_module" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=2;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="tp4056_charger" value="COM-NC">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_uno_servo" edge="1" parent="1" source="uno_mcu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="servo_motors" value="PWM (D9/D10)">
+        <mxCell id="e_tp_batt" edge="1" parent="1" source="tp4056_charger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=2;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="battery_pack" value="Charge">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_uno_lcd" edge="1" parent="1" source="uno_mcu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="lcd_display" value="I2C">
+        <mxCell id="e_batt_mt" edge="1" parent="1" source="battery_pack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=2;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="mt3608_boost" value="3.7V DC">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e_uno_relay" edge="1" parent="1" source="uno_mcu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="relay_module" value="D7">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e_relay_tp" edge="1" parent="1" source="relay_module" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;" target="tp4056_charger">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e_tp_batt" edge="1" parent="1" source="tp4056_charger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;" target="battery_pack">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e_batt_esp" edge="1" parent="1" source="battery_pack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="esp_mcu" value="GPIO4 ADC">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e_uno_esp_uart" edge="1" parent="1" source="uno_mcu" target="esp_mcu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;startArrow=classic;startFill=1;endArrow=classic;endFill=1;fontSize=11;fontStyle=1;align=center;verticalAlign=bottom;" value="UART 9600">
+        <mxCell id="e_mt_to_bus" edge="1" parent="1" source="mt3608_boost" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=2.5;endArrow=classic;endFill=1;fontSize=10;fontStyle=1;align=center;verticalAlign=bottom;" target="power_bus_5v" value="5.0V Boost">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="380" y="245" />
-              <mxPoint x="660" y="245" />
+              <mxPoint x="927.5" y="290" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e_wifi_cloud" edge="1" parent="1" source="wifi_box" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;startArrow=classic;startFill=1;endArrow=classic;endFill=1;" target="cloud_internet">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="e_bus_uno" edge="1" parent="1" source="power_bus_5v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;dashed=1;dashPattern=5 3;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="uno_mcu" value="5V Power">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="410" y="210" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="e_cloud_server" edge="1" parent="1" source="cloud_internet" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;startArrow=classic;startFill=1;endArrow=classic;endFill=1;" target="firebase_server">
-          <mxGeometry relative="1" as="geometry" />
+        <mxCell id="e_bus_servo" edge="1" parent="1" source="power_bus_5v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;dashed=1;dashPattern=5 3;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=middle;" target="servo_motors" value="5V VCC">
+          <mxGeometry relative="1" x="0.1273" as="geometry">
+            <Array as="points">
+              <mxPoint x="590" y="150" />
+              <mxPoint x="590" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_bus_lcd" edge="1" parent="1" source="power_bus_5v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;dashed=1;dashPattern=5 3;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=middle;" target="lcd_display" value="5V VCC">
+          <mxGeometry relative="1" x="0.3647" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="220" />
+              <mxPoint x="500" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_bus_esp" edge="1" parent="1" source="power_bus_5v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;dashed=1;dashPattern=5 3;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="esp_mcu" value="">
+          <mxGeometry relative="1" x="-0.0204" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="700" y="278" />
+              <mxPoint x="700" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="vyYxGaOv3Z2To2n7zNVU-1" connectable="0" parent="e_bus_esp" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=10;" value="5V In" vertex="1">
+          <mxGeometry relative="1" x="0.2268" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ldr_uno" edge="1" parent="1" source="ldr_sensor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="uno_mcu" value="Analog (A0 - A3)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="190" y="112.5" />
+              <mxPoint x="190" y="112.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ina_uno" edge="1" parent="1" source="ina219_sensor" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="uno_mcu" value="I2C (SDA/SCL)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="260" y="270" />
+              <mxPoint x="260" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_uno_servo" edge="1" parent="1" source="uno_mcu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="servo_motors" value="PWM (D9/D10)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="90" />
+              <mxPoint x="370" y="90" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_uno_lcd" edge="1" parent="1" source="uno_mcu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="lcd_display" value="I2C (A4/A5)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="390" y="160" />
+              <mxPoint x="390" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_uno_relay" edge="1" parent="1" source="uno_mcu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="relay_module" value="D7 Trigger">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="325" />
+              <mxPoint x="435" y="325" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_uno_esp_uart" edge="1" parent="1" source="uno_mcu" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;startArrow=classic;startFill=1;endArrow=classic;endFill=1;fontSize=11;fontStyle=1;align=center;verticalAlign=bottom;" target="esp_mcu" value="UART 9600">
+          <mxGeometry relative="1" x="0.0009" as="geometry">
+            <Array as="points">
+              <mxPoint x="282.5" y="250" />
+              <mxPoint x="785" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_batt_esp" edge="1" parent="1" source="battery_pack" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="esp_mcu" value="">
+          <mxGeometry relative="1" x="0.2" y="-107" as="geometry">
+            <mxPoint x="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="752" y="310" />
+              <mxPoint x="752" y="245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_wifi_cloud" edge="1" parent="1" source="wifi_box" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;startArrow=classic;startFill=1;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" value="Wi-Fi">
+          <mxGeometry relative="1" x="-0.0129" as="geometry">
+            <Array as="points">
+              <mxPoint x="940" y="141" />
+              <mxPoint x="940" y="222.5" />
+            </Array>
+            <mxPoint x="910" y="162" as="sourcePoint" />
+            <mxPoint x="1090" y="222.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_cloud_server" edge="1" parent="1" source="cloud_internet" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;startArrow=classic;startFill=1;endArrow=classic;endFill=1;fontSize=10;align=center;verticalAlign=bottom;" target="firebase_server" value="HTTPS&lt;div&gt;&lt;br&gt;&lt;/div&gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1270" y="222.5" />
+              <mxPoint x="1270" y="222.5" />
+            </Array>
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>

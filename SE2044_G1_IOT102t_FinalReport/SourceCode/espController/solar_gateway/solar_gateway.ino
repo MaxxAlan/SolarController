@@ -1,6 +1,6 @@
 /*
  ==========================================================================
-   NHOM 4 - SE2044  |  ESP32-S3 GATEWAY  +  FIREBASE
+   NHOM 1 - SE2044  |  ESP32-S3 GATEWAY  +  FIREBASE
  ==========================================================================
   HANH VI KHI KHOI DONG:
    1. Doc WiFi dang luu trong bo nho (Preferences). Chua co / khong ket noi
