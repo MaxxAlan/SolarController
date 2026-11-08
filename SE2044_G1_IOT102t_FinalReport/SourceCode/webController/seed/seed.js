@@ -1,9 +1,9 @@
 /*
 TAO SEED 3 TAI KHOAN + ROLE TRONG FIREBASE (Auth + /users/role)
 
-  user@nhom4.com   / 123456 -> role "user"
-  admin@nhom4.com  / 123456 -> role "admin"
-  esp32@nhom4.com  / 123456 -> role "device" (dung cho ESP32 ket noi RTDB)
+  user@nhom1.com   / 123456 -> role "user"
+  admin@nhom1.com  / 123456 -> role "admin"
+  esp32@nhom1.com  / 123456 -> role "device" (dung cho ESP32 ket noi RTDB)
 
   (Firebase bat mat khau toi thieu 6 ky tu -> khong dung duoc "123".)
 
@@ -32,9 +32,9 @@ admin.initializeApp({
 });
 
 const users = [
-  { email: 'user@nhom4.com',  password: '123456', role: 'user' },
-  { email: 'admin@nhom4.com', password: '123456', role: 'admin' },
-  { email: 'esp32@nhom4.com', password: '123456', role: 'device' },
+  { email: 'user@nhom1.com',  password: '123456', role: 'user' },
+  { email: 'admin@nhom1.com', password: '123456', role: 'admin' },
+  { email: 'esp32@nhom1.com', password: '123456', role: 'device' },
 ];
 
 (async () => {

@@ -46,7 +46,7 @@
 #define TEST_MODE             0
 
 // ---------- 1. Thong tin nhom (dong 1 tren LCD) ------------------------
-#define GROUP_TEXT            "NHOM 4 - SE2044"
+#define GROUP_TEXT            "NHOM 1 - SE2044"
 
 // ---------- 2. Servo ---------------------------------------------------
 #define PIN_SERVO_PAN         9       // servo QUAY NGANG (trai <-> phai)
@@ -60,12 +60,13 @@
 #define TILT_REVERSE          false
 
 // Gioi han goc de khong ket khung co khi (admin co the doi qua web).
-// HOME MAC DINH = 0 cho CA HAI servo (co khi da cai lai moi):
+// Offset co khi: lap lech truc Doc (Tilt) 90 do (logic 0 do -> servo thuc 90 do)
+#define TILT_OFFSET_DEG       90      // Goc servo thuc te = goc logic + 90 do
 #define PAN_MIN_DEG           0
 #define PAN_MAX_DEG           170     // bot ben trai 30 do (180 -> 150)
 #define PAN_HOME_DEG          0
 #define TILT_MIN_DEG          0
-#define TILT_MAX_DEG          160
+#define TILT_MAX_DEG          90      // logic 0..90 do -> servo thuc te quay 90..180 do
 #define TILT_HOME_DEG         0
 
 // ---------- 3. Cam bien anh sang LDR (chan AO) -------------------------
@@ -294,6 +295,12 @@ int stepToward(int cur, int target) {
   return cur;
 }
 
+// Ham ghi servo Tilt co bu offset co khi (goc thuc te = goc logic + TILT_OFFSET_DEG)
+void writeServoTilt(int deg) {
+  int actual = constrain(deg + TILT_OFFSET_DEG, 0, 180);
+  servoTilt.write(actual);
+}
+
 void trackSun() {
   readLdrs();
 
@@ -335,7 +342,7 @@ void trackSun() {
   }
 
   if (panDeg  != oldPan)  servoPan.write(panDeg);
-  if (tiltDeg != oldTilt) servoTilt.write(tiltDeg);
+  if (tiltDeg != oldTilt) writeServoTilt(tiltDeg);
 }
 
 // ------------------------------ UART ----------------------------------
@@ -351,8 +358,8 @@ bool nextField(char*& p, long& out) {
 void applyConfig(long a, long b, long c, long d, long e, long f, long g, long h) {
   panMinDeg    = constrain((int)a, 0, 179);
   panMaxDeg    = constrain((int)b, panMinDeg, 179);
-  tiltMinDeg   = constrain((int)c, 0, 179);
-  tiltMaxDeg   = constrain((int)d, tiltMinDeg, 179);
+  tiltMinDeg   = constrain((int)c, 0, 180 - TILT_OFFSET_DEG);
+  tiltMaxDeg   = constrain((int)d, tiltMinDeg, 180 - TILT_OFFSET_DEG);
   solarOnMv    = constrain((int)e, 0, 20000);
   solarOffMv   = constrain((int)f, 0, max(solarOnMv, 1));
   battStopPct  = constrain((int)g, 0, 100);
@@ -361,7 +368,7 @@ void applyConfig(long a, long b, long c, long d, long e, long f, long g, long h)
   panDeg  = constrain(panDeg,  panMinDeg,  panMaxDeg);
   tiltDeg = constrain(tiltDeg, tiltMinDeg, tiltMaxDeg);
   servoPan.write(panDeg);
-  servoTilt.write(tiltDeg);
+  writeServoTilt(tiltDeg);
 }
 
 // Goi tu ESP:
@@ -552,7 +559,7 @@ void setup() {
   servoPan.attach(PIN_SERVO_PAN);
   servoTilt.attach(PIN_SERVO_TILT);
   servoPan.write(PAN_HOME_DEG);   // HOME = 0 (ca 2 servo)
-  servoTilt.write(TILT_HOME_DEG);
+  writeServoTilt(TILT_HOME_DEG);
   panDeg  = PAN_HOME_DEG;
   tiltDeg = TILT_HOME_DEG;
 

@@ -1,4 +1,4 @@
-# SOLAR TRACKER — NHOM 4 SE2044 — Final build
+# SOLAR TRACKER — NHOM 1 SE2044 — Final build
 
 Hardware: Arduino UNO (sun tracker) + ESP32-S3 (gateway) + Firebase (Auth, RTDB, Hosting).
 The dashboard runs on Firebase Hosting — the ESP only bridges UNO <-> RTDB.
@@ -28,8 +28,8 @@ Libraries (Arduino Library Manager): **Adafruit INA219** (with Adafruit BusIO),
 **LiquidCrystal I2C** (Frank de Brabander), Servo (built-in).
 
 Configs live in the .ino header: servo PAN/TILT (D9/D10), PAN_REVERSE/TILT_REVERSE,
-angle limits (UNO defaults PAN 0..170, TILT 0..160 — the ESP immediately overrides
-them with the web defaults **PAN 0..150, TILT 0..160** via the `K` command, and the
+angle limits (UNO defaults PAN 0..150, TILT 0..90 — the ESP immediately overrides
+them with the web defaults **PAN 0..150, TILT 0..90** via the `K` command, and the
 admin can change both from the dashboard CONFIG panel), **HOME = 0 for both servos**,
 LDR pins A2/A1/A3/A0, LDR_LOWER_IS_BRIGHTER, tracking params, relay D7, LCD 0x27,
 UART 9600.
@@ -64,7 +64,7 @@ The Firebase defines are already filled with this project's real values
 ```cpp
 #define FIREBASE_API_KEY   "AIzaSyCnPlrCSClwOm8tWH7EHEUiFVgKa6rEyq0"  // Project settings > General
 #define FIREBASE_DB_URL    "https://solarcontroller-1cc93-default-rtdb.asia-southeast1.firebasedatabase.app/"
-#define DEVICE_EMAIL       "esp32@nhom4.com"         // device-role account in Auth
+#define DEVICE_EMAIL       "esp32@nhom1.com"         // device-role account in Auth
 #define DEVICE_PASSWORD    "123456"                 // Firebase requires >= 6 chars
 #define DASHBOARD_URL      "https://solarcontroller-1cc93.web.app/"
 ```
@@ -140,16 +140,16 @@ steps only for recreating the project from scratch.)
 
 All three accounts share the password **`123456`** (Firebase's minimum is 6
 chars, so `123` is not allowed). The login page accepts a **short username**:
-typing `user` or `admin` is enough — the page appends `@nhom4.com` itself.
+typing `user` or `admin` is enough — the page appends `@nhom1.com` itself.
 
 **Status: already created in the Firebase Console (Nov 2026) with roles set** —
 only recreate with the steps below if the project is reset.
 
 | Username (login) | Email in Auth | Password | Role at /users/<uid>/role |
 |---|---|---|---|
-| `user` | user@nhom4.com | 123456 | user |
-| `admin` | admin@nhom4.com | 123456 | admin |
-| `esp32` | esp32@nhom4.com | 123456 | device (ESP firmware) |
+| `user` | user@nhom1.com | 123456 | user |
+| `admin` | admin@nhom1.com | 123456 | admin |
+| `esp32` | esp32@nhom1.com | 123456 | device (ESP firmware) |
 
 Way A (script): Console > Service accounts > Generate new private key, save as
 `seed/serviceAccountKey.json`, fix `DATABASE_URL` in seed.js, then:

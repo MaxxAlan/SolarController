@@ -1,5 +1,5 @@
 /* ==========================================================================
-   NHOM 4 - SE2044 | Dashboard Logic (Firebase Auth + Realtime Database)
+   NHOM 1 - SE2044 | Dashboard Logic (Firebase Auth + Realtime Database)
    Vai tro (role) doc tu /users/<uid>/role:
      - "user"  : coi dashboard, manual/auto, relay, TAT KHAN CAP, doi WiFi
      - "admin" : tat ca + cau hinh gioi han goc quay + nguong relay
@@ -39,8 +39,11 @@ auth.onAuthStateChanged(async user => {
   }
 
   // Display user info
-  if ($('who')) $('who').textContent = user.email;
+  if ($('who')) $('who').textContent = (user.email || '').replace('@nhom4.com', '@nhom1.com');
   if ($('userAvatar')) $('userAvatar').textContent = (user.email || 'U')[0].toUpperCase();
+
+  // Tu dong tai bieu do lich su nang luong ngay khi dang nhap
+  loadHistoryAnalytics(true);
 
   try {
     const snap = await db.ref(rolePath(user)).get();
@@ -445,31 +448,37 @@ if ($('w-save')) {
 }
 
 /* ---------------------- HISTORY ANALYTICS & CANVAS CHART ---------------------- */
-if ($('h-load')) {
-  $('h-load').addEventListener('click', async () => {
-    const btn = $('h-load');
+async function loadHistoryAnalytics(silent = false) {
+  const btn = $('h-load');
+  if (btn && !silent) {
     btn.disabled = true;
     btn.innerHTML = 'Đang tải dữ liệu...';
-    try {
-      const s = await db.ref('history').limitToLast(96).get();
-      const canvas = $('his');
-      if (!s.exists()) {
-        drawHistoryChart(canvas, []);
-        toast('Chưa có bản ghi lịch sử nào.');
-      } else {
-        const vals = Object.values(s.val())
-          .map(x => x.energy_wh ?? null)
-          .filter(v => v != null);
-        drawHistoryChart(canvas, vals);
-        toast(`Đã tải thành công ${vals.length} bản ghi năng lượng!`);
-      }
-    } catch (err) {
-      toast('Lỗi khi tải lịch sử: ' + err.message);
-    } finally {
+  }
+  try {
+    const s = await db.ref('history').limitToLast(96).get();
+    const canvas = $('his');
+    if (!s.exists()) {
+      drawHistoryChart(canvas, []);
+      if (!silent) toast('Chưa có bản ghi lịch sử nào.');
+    } else {
+      const vals = Object.values(s.val())
+        .map(x => x.energy_wh ?? null)
+        .filter(v => v != null);
+      drawHistoryChart(canvas, vals);
+      if (!silent) toast(`Đã tải thành công ${vals.length} bản ghi năng lượng!`);
+    }
+  } catch (err) {
+    if (!silent) toast('Lỗi khi tải lịch sử: ' + err.message);
+  } finally {
+    if (btn) {
       btn.disabled = false;
       btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg> <span>Tải dữ liệu mới nhất</span>`;
     }
-  });
+  }
+}
+
+if ($('h-load')) {
+  $('h-load').addEventListener('click', () => loadHistoryAnalytics(false));
 }
 
 function drawHistoryChart(canvas, vals) {
@@ -569,4 +578,333 @@ function drawHistoryChart(canvas, vals) {
 window.addEventListener('load', () => {
   const canvas = $('his');
   if (canvas) drawHistoryChart(canvas, []);
+
+  const radar = $('scanRadarCanvas');
+  if (radar) drawScanRadar(radar, [], null, null);
 });
+
+/* ==========================================================================
+   SKY LIGHT SCANNER (QUÉT HƯỚNG SÁNG MẠNH NHẤT)
+   ========================================================================== */
+let isScanning = false;
+let scanAbortRequested = false;
+let scannedPoints = [];
+let scanBestPoint = null;
+let scanPrevMode = 'auto';
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function getScanGrid(preset) {
+  if (preset === 'quick') {
+    // 6 goc do nhanh (Tilt 0..90)
+    return [
+      { pan: 0, tilt: 25 }, { pan: 75, tilt: 25 }, { pan: 150, tilt: 25 },
+      { pan: 0, tilt: 65 }, { pan: 75, tilt: 65 }, { pan: 150, tilt: 65 }
+    ];
+  } else if (preset === 'fine') {
+    // 20 goc do chi tiet (Tilt 0..90)
+    const pans = [0, 35, 75, 115, 150];
+    const tilts = [15, 40, 65, 85];
+    const pts = [];
+    tilts.forEach(t => pans.forEach(p => pts.push({ pan: p, tilt: t })));
+    return pts;
+  } else {
+    // standard (12 goc do chuan, Tilt 0..90)
+    const pans = [0, 50, 100, 150];
+    const tilts = [20, 50, 80];
+    const pts = [];
+    tilts.forEach(t => pans.forEach(p => pts.push({ pan: p, tilt: t })));
+    return pts;
+  }
+}
+
+function drawScanRadar(canvas, points, currentPoint, bestPoint) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || canvas.clientWidth || 360;
+  const H = rect.height || canvas.clientHeight || 110;
+
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 28, padR = 14, padT = 14, padB = 20;
+  const pW = W - padL - padR;
+  const pH = H - padT - padB;
+
+  // Background Grid Lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i <= 2; i++) {
+    const y = padT + (pH * i) / 2;
+    ctx.moveTo(padL, y); ctx.lineTo(W - padR, y);
+  }
+  for (let i = 0; i <= 3; i++) {
+    const x = padL + (pW * i) / 3;
+    ctx.moveTo(x, padT); ctx.lineTo(x, H - padB);
+  }
+  ctx.stroke();
+
+  // Axis Labels
+  ctx.fillStyle = '#64748b';
+  ctx.font = '9.5px "JetBrains Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('90°', padL - 4, padT + 4);
+  ctx.fillText('0°', padL - 4, H - padB);
+  ctx.textAlign = 'center';
+  ctx.fillText('Pan: 0°', padL, H - 6);
+  ctx.fillText('75°', padL + pW / 2, H - 6);
+  ctx.fillText('150°', W - padR, H - 6);
+
+  if (!points || points.length === 0) {
+    ctx.fillStyle = '#475569';
+    ctx.font = '11.5px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Nhấn "BẮT ĐẦU QUÉT" để lập bản đồ nhiệt độ sáng bầu trời', padL + pW / 2, padT + pH / 2 + 4);
+    return;
+  }
+
+  // Draw Scanned Points with Heatmap Intensity
+  points.forEach(p => {
+    const x = padL + (p.pan / 150) * pW;
+    const y = padT + pH - (p.tilt / 90) * pH;
+    const ratio = Math.min(1, Math.max(0, p.lux / 1023));
+
+    const grad = ctx.createRadialGradient(x, y, 1, x, y, 12);
+    if (ratio > 0.5) {
+      grad.addColorStop(0, 'rgba(245, 158, 11, 0.65)');
+      grad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+    } else {
+      grad.addColorStop(0, 'rgba(6, 182, 212, 0.5)');
+      grad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+    }
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = ratio > 0.5 ? '#f59e0b' : '#38bdf8';
+    ctx.fill();
+  });
+
+  // Current Target Ring
+  if (currentPoint) {
+    const cx = padL + (currentPoint.pan / 150) * pW;
+    const cy = padT + pH - (currentPoint.tilt / 90) * pH;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Best Target Marker
+  if (bestPoint) {
+    const bx = padL + (bestPoint.pan / 150) * pW;
+    const by = padT + pH - (bestPoint.tilt / 90) * pH;
+
+    ctx.beginPath();
+    ctx.arc(bx, by, 9, 0, Math.PI * 2);
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 9.5px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('MAX', bx, by - 12);
+  }
+}
+
+async function startSkyScan() {
+  if (isScanning) {
+    toast('Đang trong quá trình quét, vui lòng đợi hoặc nhấn Dừng quét.');
+    return;
+  }
+
+  if (espOff || !UNO_LINK_LIVE) {
+    toast('⚠️ Lưu ý: Tín hiệu ESP/UNO chưa hoàn tất, hệ thống vẫn gửi lệnh quét...');
+  }
+
+  isScanning = true;
+  scanAbortRequested = false;
+  scannedPoints = [];
+  scanBestPoint = null;
+
+  const btnStart = $('btnStartScan');
+  const btnStop = $('btnStopScan');
+  const badge = $('scanBadge');
+  const resultCard = $('scanResultCard');
+  const preset = $('scanPreset')?.value || 'standard';
+  const grid = getScanGrid(preset);
+
+  if (resultCard) resultCard.style.display = 'none';
+  if (btnStart) btnStart.disabled = true;
+  if (btnStop) {
+    btnStop.style.display = 'inline-flex';
+    btnStop.disabled = false;
+    btnStop.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg> Dừng quét`;
+  }
+  if (badge) {
+    badge.textContent = 'ĐANG QUÉT...';
+    badge.style.background = 'rgba(245, 158, 11, 0.15)';
+    badge.style.color = '#f59e0b';
+    badge.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+  }
+
+  try {
+    scanPrevMode = (lastTele && lastTele.mode === 0) ? 'auto' : 'manual';
+    await db.ref('cmd/mode').set('manual');
+    toast('🔭 Bắt đầu chu trình quét lập bản đồ hướng sáng!');
+
+    const radar = $('scanRadarCanvas');
+    drawScanRadar(radar, [], null, null);
+
+    for (let i = 0; i < grid.length; i++) {
+      if (scanAbortRequested) break;
+
+      const pt = grid[i];
+      const pct = Math.round(((i + 1) / grid.length) * 100);
+
+      if ($('scanStatusText')) $('scanStatusText').textContent = `Đang đo góc ${i + 1}/${grid.length} (Pan: ${pt.pan}°, Tilt: ${pt.tilt}°)...`;
+      if ($('scanProgressPct')) $('scanProgressPct').textContent = `${pct}%`;
+      if ($('scanProgressBar')) $('scanProgressBar').style.width = `${pct}%`;
+      if ($('scanCurrentAngle')) $('scanCurrentAngle').textContent = `P:${pt.pan}° | T:${pt.tilt}°`;
+
+      // Cap nhat thanh truot giao dien
+      if ($('sl-pan')) $('sl-pan').value = pt.pan;
+      if ($('v-pan')) $('v-pan').textContent = pt.pan;
+      if ($('sl-tilt')) $('sl-tilt').value = pt.tilt;
+      if ($('v-tilt')) $('v-tilt').textContent = pt.tilt;
+
+      // Gui lenh sang Firebase cho ESP32 & Arduino Uno
+      await db.ref('cmd').update({ pan: pt.pan, tilt: pt.tilt });
+
+      // Cho servo di chuyen toi vi tri va on dinh (1.2s)
+      for (let w = 0; w < 6; w++) {
+        if (scanAbortRequested) break;
+        await sleep(200);
+      }
+      if (scanAbortRequested) break;
+
+      // Doc cuong do sang thuc te tu 4 LDR
+      let currentLux = 0;
+      if (lastTele) {
+        currentLux = Math.round(((lastTele.ldr_tl || 0) + (lastTele.ldr_tr || 0) + (lastTele.ldr_bl || 0) + (lastTele.ldr_br || 0)) / 4);
+      }
+
+      if ($('scanCurrentLux')) $('scanCurrentLux').textContent = `${currentLux} / 1023`;
+
+      const pointRecord = { pan: pt.pan, tilt: pt.tilt, lux: currentLux };
+      scannedPoints.push(pointRecord);
+
+      if (!scanBestPoint || currentLux > scanBestPoint.lux) {
+        scanBestPoint = pointRecord;
+        if ($('scanBestTarget')) {
+          $('scanBestTarget').textContent = `P:${pointRecord.pan}° T:${pointRecord.tilt}° (${currentLux})`;
+        }
+      }
+
+      if ($('scanPointCount')) $('scanPointCount').textContent = `${scannedPoints.length}/${grid.length} điểm đã đo`;
+      drawScanRadar(radar, scannedPoints, pt, scanBestPoint);
+    }
+
+    if (scanAbortRequested) {
+      if (badge) {
+        badge.textContent = 'ĐÃ DỪNG';
+        badge.style.background = 'rgba(239, 68, 68, 0.15)';
+        badge.style.color = '#ef4444';
+        badge.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+      }
+      if ($('scanStatusText')) $('scanStatusText').textContent = 'Đã dừng quá trình quét theo lệnh người dùng.';
+      toast('Đã dừng quét hướng sáng.');
+      return;
+    }
+
+    if ($('scanProgressPct')) $('scanProgressPct').textContent = '100%';
+    if ($('scanProgressBar')) $('scanProgressBar').style.width = '100%';
+    if ($('scanStatusText')) $('scanStatusText').textContent = 'Quét hoàn tất! Đang điều khiển tấm pin về hướng sáng nhất...';
+
+    if (badge) {
+      badge.textContent = 'HOÀN TẤT';
+      badge.style.background = 'rgba(16, 185, 129, 0.15)';
+      badge.style.color = '#10b981';
+      badge.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+    }
+
+    if (scanBestPoint) {
+      await db.ref('cmd').update({ pan: scanBestPoint.pan, tilt: scanBestPoint.tilt });
+      if ($('sl-pan')) $('sl-pan').value = scanBestPoint.pan;
+      if ($('v-pan')) $('v-pan').textContent = scanBestPoint.pan;
+      if ($('sl-tilt')) $('sl-tilt').value = scanBestPoint.tilt;
+      if ($('v-tilt')) $('v-tilt').textContent = scanBestPoint.tilt;
+
+      drawScanRadar(radar, scannedPoints, scanBestPoint, scanBestPoint);
+
+      if (resultCard) {
+        resultCard.style.display = 'block';
+        if ($('scanResultDesc')) {
+          $('scanResultDesc').textContent = `Tọa độ tối ưu: Pan ${scanBestPoint.pan}° | Tilt ${scanBestPoint.tilt}° (Cường độ cực đại: ${scanBestPoint.lux}/1023)`;
+        }
+      }
+      toast(`🎯 Đã tìm thấy và khóa hướng sáng nhất: Pan ${scanBestPoint.pan}°, Tilt ${scanBestPoint.tilt}°!`, 5000);
+    }
+  } catch (err) {
+    console.error('Loi startSkyScan:', err);
+    toast('Lỗi khi quét: ' + err.message);
+  } finally {
+    isScanning = false;
+    if (btnStart) btnStart.disabled = false;
+    if (btnStop) {
+      btnStop.style.display = 'none';
+      btnStop.disabled = true;
+    }
+  }
+}
+
+function stopSkyScan() {
+  scanAbortRequested = true;
+  const btn = $('btnStopScan');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Đang dừng...';
+  }
+}
+
+function applyBestAngle() {
+  if (scanBestPoint) {
+    db.ref('cmd').update({ pan: scanBestPoint.pan, tilt: scanBestPoint.tilt, mode: 'manual' });
+    toast(`Đã khóa góc Pan ${scanBestPoint.pan}°, Tilt ${scanBestPoint.tilt}° (Chế độ Thủ công)`);
+  }
+}
+
+function resumeAutoMode() {
+  db.ref('cmd/mode').set('auto');
+  if ($('scanResultCard')) $('scanResultCard').style.display = 'none';
+  toast('Hệ thống đã chuyển về chế độ AUTO (Tự động bám trời)');
+}
+
+// Gan global cho ca inline onclick va addEventListener
+window.startSkyScan = startSkyScan;
+window.stopSkyScan = stopSkyScan;
+window.applyBestAngle = applyBestAngle;
+window.resumeAutoMode = resumeAutoMode;
+
+if ($('btnStartScan')) {
+  $('btnStartScan').addEventListener('click', startSkyScan);
+}
+if ($('btnStopScan')) {
+  $('btnStopScan').addEventListener('click', stopSkyScan);
+}
+if ($('btnApplyBestAngle')) {
+  $('btnApplyBestAngle').addEventListener('click', applyBestAngle);
+}
+if ($('btnResumeAuto')) {
+  $('btnResumeAuto').addEventListener('click', resumeAutoMode);
+}

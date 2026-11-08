@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Đăng nhập | Solar Tracker - SE2044 Nhóm 4</title>
+  <title>Đăng nhập | Solar Tracker - SE2044 Nhóm 1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -398,7 +398,7 @@
       <h1 class="brand-title">SOLAR TRACKER</h1>
       <p class="brand-subtitle">
         <span>Hệ thống giám sát & Điều khiển</span>
-        <span class="badge-tag">SE2044 • NHÓM 4</span>
+        <span class="badge-tag">SE2044 • NHÓM 1</span>
       </p>
     </div>
 
@@ -536,7 +536,7 @@
       return;
     }
 
-    if (!email.includes('@')) email += '@nhom4.com';
+    if (!email.includes('@')) email += '@nhom1.com';
 
     const btn = $('btnLogin');
     const spinner = $('btnSpinner');
@@ -547,7 +547,16 @@
     btnText.textContent = 'Đang xác thực...';
 
     try {
-      await firebase.auth().signInWithEmailAndPassword(email, pass);
+      try {
+        await firebase.auth().signInWithEmailAndPassword(email, pass);
+      } catch (authErr) {
+        if ((authErr.code === 'auth/user-not-found' || authErr.code === 'auth/invalid-credential') && email.endsWith('@nhom1.com')) {
+          const fallbackEmail = email.replace('@nhom1.com', '@nhom4.com');
+          await firebase.auth().signInWithEmailAndPassword(fallbackEmail, pass);
+        } else {
+          throw authErr;
+        }
+      }
       // onAuthStateChanged tu dong redirect
     } catch (e) {
       btn.disabled = false;

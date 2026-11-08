@@ -102,6 +102,6 @@ online; nếu ESP đã mất WiFi thì vào lại `SolarTracker-Setup` như trê
 
 ## 4. Tài liệu
 
-- [Mã nguồn + README chi tiết (UART protocol, Firebase, deploy, troubleshooting)](SE2044_G4_IOT102t_FinalReport/SourceCode/README.md)
-- Report / Slides / Video demo: `SE2044_G4_IOT102t_FinalReport/Document`, `Video Demo`
+- [Mã nguồn + README chi tiết (UART protocol, Firebase, deploy, troubleshooting)](SE2044_G1_IOT102t_FinalReport/SourceCode/README.md)
+- Report / Slides / Video demo: `SE2044_G1_IOT102t_FinalReport/Document`, `Video Demo`
 - Bài nộp LMS: `LMS/`

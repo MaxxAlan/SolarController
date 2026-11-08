@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bảng điều khiển | Solar Tracker - SE2044 Nhóm 4</title>
+  <title>Bảng điều khiển | Solar Tracker - SE2044 Nhóm 1</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -877,7 +877,7 @@
         </svg>
       </div>
       <div class="nav-title-group">
-        <h1>SOLAR TRACKER <span class="team-badge">SE2044 • G4</span></h1>
+        <h1>SOLAR TRACKER <span class="team-badge">SE2044 • G1</span></h1>
         <div class="nav-sub">Trung tâm điều khiển năng lượng mặt trời</div>
       </div>
     </div>
@@ -1165,13 +1165,13 @@
               <span class="slider-name">Góc DỌC (Tilt)</span>
               <span class="slider-val-badge"><b id="v-tilt">0</b>°</span>
             </div>
-            <input type="range" id="sl-tilt" min="0" max="179" value="0">
+            <input type="range" id="sl-tilt" min="0" max="90" value="0">
             <div class="slider-presets">
               <button type="button" class="btn-preset" onclick="setSlider('sl-tilt', 'v-tilt', 0, 'cmd/tilt')">0°</button>
+              <button type="button" class="btn-preset" onclick="setSlider('sl-tilt', 'v-tilt', 20, 'cmd/tilt')">20°</button>
               <button type="button" class="btn-preset" onclick="setSlider('sl-tilt', 'v-tilt', 45, 'cmd/tilt')">45°</button>
+              <button type="button" class="btn-preset" onclick="setSlider('sl-tilt', 'v-tilt', 70, 'cmd/tilt')">70°</button>
               <button type="button" class="btn-preset" onclick="setSlider('sl-tilt', 'v-tilt', 90, 'cmd/tilt')">90°</button>
-              <button type="button" class="btn-preset" onclick="setSlider('sl-tilt', 'v-tilt', 135, 'cmd/tilt')">135°</button>
-              <button type="button" class="btn-preset" onclick="setSlider('sl-tilt', 'v-tilt', 179, 'cmd/tilt')">179°</button>
             </div>
           </div>
         </div>
@@ -1208,6 +1208,112 @@
         </button>
       </section>
 
+      <!-- SKY SCANNER PANEL (QUÉT HƯỚNG SÁNG MẠNH NHẤT) -->
+      <section class="panel" id="panelScanner">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2"></path>
+              <path d="M12 20v2"></path>
+              <path d="m4.93 4.93 1.41 1.41"></path>
+              <path d="m17.66 17.66 1.41 1.41"></path>
+              <path d="M2 12h2"></path>
+              <path d="M20 12h2"></path>
+              <path d="m6.34 17.66-1.41 1.41"></path>
+              <path d="m19.07 4.93-1.41 1.41"></path>
+            </svg>
+            <span>Quét Hướng Sáng Mạnh Nhất (Sky Scanner)</span>
+          </div>
+          <span class="stat-badge" id="scanBadge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3)">SẴN SÀNG</span>
+        </div>
+
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
+          Tự động điều khiển 2 trục Pan/Tilt quét qua lưới tọa độ bầu trời, đo cường độ cảm biến quang trở (LDR) để lập bản đồ nguồn sáng và tự động xoay tấm pin về hướng sáng tối ưu nhất.
+        </p>
+
+        <!-- Scanner Controls & Mode -->
+        <div style="display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap;">
+          <button id="btnStartScan" class="btn-action-primary" type="button" onclick="startSkyScan()" style="padding: 9px 18px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="btnStartScanText">BẮT ĐẦU QUÉT</span>
+          </button>
+          <button id="btnStopScan" class="btn-preset" type="button" onclick="stopSkyScan()" style="padding: 9px 16px; display: none; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: -2px; margin-right: 4px;">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            </svg>
+            Dừng quét
+          </button>
+          <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted);">
+            <span>Lưới quét:</span>
+            <select id="scanPreset" style="background: rgba(11, 15, 23, 0.8); color: var(--text); border: 1px solid var(--border); padding: 6px 10px; border-radius: 8px; font-size: 12.5px; outline: none;">
+              <option value="quick">Quét nhanh (6 góc)</option>
+              <option value="standard" selected>Quét chuẩn (12 góc)</option>
+              <option value="fine">Quét chi tiết (20 góc)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Scanner Progress & Realtime Feedback Box -->
+        <div id="scanStatusBox" style="background: rgba(11, 15, 23, 0.6); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12.5px;">
+            <span id="scanStatusText" style="color: var(--text-muted);">Trạng thái: Sẵn sàng quét</span>
+            <span id="scanProgressPct" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--primary);">0%</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-bottom: 12px;">
+            <div id="scanProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #06b6d4, #f59e0b); transition: width 0.3s ease;"></div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+            <div style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">GÓC ĐANG ĐO</div>
+              <div id="scanCurrentAngle" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #38bdf8; margin-top: 3px;">--</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">ĐỘ SÁNG TẠI CHỖ</div>
+              <div id="scanCurrentLux" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #f59e0b; margin-top: 3px;">--</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.02); padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">HƯỚNG TỐI ƯU NHẤT</div>
+              <div id="scanBestTarget" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #10b981; margin-top: 3px;">Chưa tìm</div>
+            </div>
+          </div>
+
+          <!-- Mini Heatmap / Radar Canvas -->
+          <div style="margin-top: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); margin-bottom: 4px;">
+              <span>Bản đồ nhiệt cường độ sáng (Pan 0..150° x Tilt 0..160°)</span>
+              <span id="scanPointCount">0 điểm đã đo</span>
+            </div>
+            <canvas id="scanRadarCanvas" style="width: 100%; height: 110px; background: rgba(8, 12, 19, 0.9); border: 1px solid var(--border); border-radius: 8px; display: block;"></canvas>
+          </div>
+        </div>
+
+        <!-- Scan Result Action Panel (Appears when completed) -->
+        <div id="scanResultCard" style="display: none; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 14px 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <div style="font-weight: 700; color: #10b981; font-size: 13.5px; margin-bottom: 2px;" id="scanResultTitle">
+                🎯 Đã tìm thấy vị trí sáng mạnh nhất!
+              </div>
+              <div style="font-size: 12.5px; color: var(--text-muted);" id="scanResultDesc">
+                Pan: 90° | Tilt: 45° (Độ sáng: 850 / 1023)
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button id="btnApplyBestAngle" type="button" onclick="applyBestAngle()" class="btn-action-primary" style="padding: 7px 14px; font-size: 12px; background: #10b981; border: none; font-weight: 600;">
+                Khóa góc này
+              </button>
+              <button id="btnResumeAuto" type="button" onclick="resumeAutoMode()" class="btn-preset" style="padding: 7px 14px; font-size: 12px;">
+                Về chế độ Auto
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- WIFI SETTINGS PANEL -->
       <section class="panel" id="panelWifi">
         <div class="panel-header">
@@ -1225,7 +1331,7 @@
         <div class="form-grid-2">
           <div class="input-group">
             <label class="input-label" for="w-ssid">Tên WiFi mới (SSID)</label>
-            <input type="text" id="w-ssid" placeholder="VD: Nhom4_Solar">
+            <input type="text" id="w-ssid" placeholder="VD: Nhom1_Solar">
           </div>
           <div class="input-group">
             <label class="input-label" for="w-pass">Mật khẩu WiFi</label>
@@ -1314,7 +1420,7 @@
           </div>
           <div class="input-group">
             <label class="input-label" for="c-tiltMax">Tilt Max (°)</label>
-            <input type="number" id="c-tiltMax" min="0" max="179" placeholder="160">
+            <input type="number" id="c-tiltMax" min="0" max="90" placeholder="90">
           </div>
         </div>
 
@@ -1373,6 +1479,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="dashboard.js"></script>
+<script src="dashboard.js?v=1.0.5"></script>
 </body>
 </html>

@@ -60,7 +60,7 @@
  * ====================================================================== */
 
 // ---------- 1. Thong tin nhom (hien tren web) --------------------------
-#define GROUP_TEXT "NHOM 4 - SE2044"
+#define GROUP_TEXT "NHOM 1 - SE2044"
 
 // ---------- 2. FIREBASE  <<< SUA 4 DONG DUOI THEO PROJECT CUA NHOM >>> --
 #define FIREBASE_API_KEY                                                       \
@@ -70,7 +70,7 @@
   "https://"                                                                   \
   "solarcontroller-1cc93-default-rtdb.asia-southeast1.firebasedatabase.app/"
 #define DEVICE_EMAIL                                                           \
-  "esp32@nhom4.com" // tai khoan loai "device" tao trong Firebase Auth
+  "esp32@nhom4.com" // tai khoan loai "device" tao trong Firebase Auth (Cloud Auth UID TOqVbDA8dXYGLLLbcCb92Wznyxr2)
 #define DEVICE_PASSWORD "123456" // >= 6 ky tu; NEN doi sang mat khau manh
 
 // Link dashboard firebase hosting - trang local cua ESP se forward toi.
@@ -149,7 +149,7 @@ bool cmdEstop = false;    // true = TAT KHAN CAP (dinh; web mo khi khac)
 
 // ---- Config gioi han + nguong relay (admin doi qua web) ----
 int cfgPanMin = 0, cfgPanMax = 150;
-int cfgTiltMin = 0, cfgTiltMax = 160;
+int cfgTiltMin = 0, cfgTiltMax = 90;
 int cfgSolarOn = 3700,
     cfgSolarOff = 3300; // OFF thap hon ON (hysteresis) de chong relay lap lai
                         // khi ap panel sag co tai
@@ -766,7 +766,7 @@ String htmlEscape(const String &s) {
 const char PORTAL_PAGE[] PROGMEM = R"rawliteral(
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NHOM 4 - SE2044 | Cau hinh WiFi</title>
+<title>NHOM 1 - SE2044 | Cau hinh WiFi</title>
 <style>
 body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:20px;max-width:420px;margin:auto}
 h1{font-size:18px}
@@ -775,7 +775,7 @@ input{width:100%;padding:10px;margin:8px 0;box-sizing:border-box;border-radius:6
 button{width:100%;padding:12px;border:0;border-radius:8px;background:#0a84ff;color:#fff;font-size:15px}
 small{color:#9ab}
 </style></head><body>
-<h1>NHOM 4 - SE2044 | Solar Tracker</h1>
+<h1>NHOM 1 - SE2044 | Solar Tracker</h1>
 <div class="c">
   <b>Cau hinh WiFi</b><br>
   <small>Nhap WiFi can ket noi, bam LUU. Thiet bi se tu khoi dong lai va noi WiFi moi.</small>
@@ -881,7 +881,7 @@ const char LOCAL_PAGE[] PROGMEM = R"rawliteral(
 <!DOCTYPE html><html><head><meta charset="utf-8">
 <meta http-equiv="refresh" content="2;url=DASHBOARD_URL">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NHOM 4 - SE2044</title>
+<title>NHOM 1 - SE2044</title>
 <script>location.replace("DASHBOARD_URL");</script>
 </head><body style="font-family:sans-serif;background:#111;color:#eee;padding:20px">
 <div>Dang chuyen den Dashboard Firebase... <a href="DASHBOARD_URL">Bam vao day neu khong tu chuyen</a></div>

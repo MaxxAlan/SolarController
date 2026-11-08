@@ -40,7 +40,7 @@
         <mxCell id="lcd_display" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;" value="LCD 2004&lt;br&gt;Display" vertex="1">
           <mxGeometry height="60" width="125" x="430" y="130" as="geometry" />
         </mxCell>
-        <mxCell id="esp_mcu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4D4D4;strokeColor=#000000;strokeWidth=1.5;fontSize=14;fontStyle=0;align=center;verticalAlign=middle;" value="ESP32-S3&lt;br&gt;Gateway&lt;br&gt;&lt;font style=&quot;font-size: 11px;&quot;&gt;(Cloud Bridge)&lt;/font&gt;" vertex="1">
+        <mxCell id="esp_mcu" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D4D4D4;strokeColor=#000000;strokeWidth=1.5;fontSize=14;fontStyle=0;align=center;verticalAlign=middle;" value="ESP32-S3&lt;br&gt;Gateway" vertex="1">
           <mxGeometry height="175" width="150" x="710" y="35" as="geometry" />
         </mxCell>
         <mxCell id="wifi_box" parent="1" style="rounded=1;arcSize=25;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=12;fontStyle=0;align=center;verticalAlign=middle;" value="Wi-Fi&lt;br&gt;2.4 GHz" vertex="1">
